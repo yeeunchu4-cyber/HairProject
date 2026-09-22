@@ -61,7 +61,7 @@ skin.py, tone.py          피부 영역 추출·피부톤 분석 프로토타입
 ## 얼굴형 분류기 검증
 
 `gb_model.json`은 학계 공개 벤치마크 데이터셋인
-[dsmlr/faceshape](https://github.com/dsmlr/faceshape)(Pasupa,
+[dsmlr/faceshape](https://github.com/dsmlr/faceshape) (Pasupa,
 Sunhem & Loo, 2019 논문에 실제 사용된 500장 규모 데이터셋)로 out-of-domain
 검증했을 때 72.6%의 정확도를 기록했습니다. 이는 해당 논문이 같은
 데이터셋으로 직접 학습·평가해 보고한 최고 성능(70.33%, 수작업 특징 +
