@@ -1109,31 +1109,31 @@ function getAnalysisReason(analysis){
 const faceShapePrinciples = {
 
   "Oval Face":{
-    principle:"Algorithm 1 기준 중간 길이·사이드로 넘긴 앞머리·혼합 스타일 등 대부분의 조합이 추천되며, 픽시컷이나 '짧은 길이+웨이브' 조합만 비추천으로 판정됩니다.",
+    principle:"대부분의 헤어스타일이 무난하게 잘 어울리는 균형 잡힌 얼굴형이에요. 다만 아주 짧은 픽시컷처럼 극단적인 스타일은 피하는 게 좋아요.",
     source:"Pasupa, Sunhem & Loo (2019), Expert Systems With Applications — Algorithm 1",
     confidence:"high"
   },
 
   "Round Face":{
-    principle:"Algorithm 1 기준 중간 길이, '긴 길이+혼합 스타일', 레이어드컷, 사이드로 넘긴 앞머리가 추천되며, 일자로 자른 블런트 뱅은 비추천으로 판정됩니다.",
+    principle:"층을 낸 레이어드컷이나 옆으로 넘긴 앞머리처럼 세로로 시선을 끄는 스타일이 둥근 느낌을 줄여줘요. 반대로 일자로 딱 자른 뱅은 얼굴을 더 둥글어 보이게 할 수 있어요.",
     source:"Pasupa, Sunhem & Loo (2019), Expert Systems With Applications — Algorithm 1",
     confidence:"high"
   },
 
   "Square Face":{
-    principle:"Algorithm 1 기준 웨이브펌, 사이드로 넘긴 앞머리, 레이어드컷이 추천되며, 블런트 뱅·짧은 길이(픽시컷 포함)·긴 생머리는 비추천으로 판정됩니다.",
+    principle:"웨이브 펌이나 옆으로 넘긴 앞머리가 각진 턱선을 부드럽게 감싸줘요. 반대로 일자로 자른 뱅이나 짧은 커트는 턱선을 더 각지게 보이게 할 수 있어요.",
     source:"Pasupa, Sunhem & Loo (2019), Expert Systems With Applications — Algorithm 1",
     confidence:"high"
   },
 
   "Heart Face":{
-    principle:"Algorithm 1 기준 웨이브펌과 사이드로 넘긴 앞머리가 추천되며, 사이드가 아닌 일반 앞머리나 레이어드(슬라이드) 스타일은 비추천으로 판정됩니다.",
+    principle:"웨이브 펌이나 옆으로 넘긴 앞머리가 넓은 이마와 좁은 턱의 균형을 맞춰줘요. 반대로 정중앙에 일자로 내린 앞머리는 이마를 더 넓어 보이게 할 수 있어요.",
     source:"Pasupa, Sunhem & Loo (2019), Expert Systems With Applications — Algorithm 1",
     confidence:"high"
   },
 
   "Long Face":{
-    principle:"Algorithm 1 기준(논문의 oblong 얼굴형) 앞머리가 있는 스타일이나 웨이브펌이 추천되며, 앞머리 없는 긴 생머리나 픽시컷은 비추천으로 판정됩니다.",
+    principle:"앞머리가 있거나 웨이브를 준 스타일이 세로로 긴 느낌을 줄여줘요. 반대로 앞머리 없이 길게 늘어뜨린 생머리는 얼굴을 더 길어 보이게 할 수 있어요.",
     source:"Pasupa, Sunhem & Loo (2019), Expert Systems With Applications — Algorithm 1",
     confidence:"high"
   }
@@ -1394,10 +1394,11 @@ const celebrityByFaceShape = {
 
 /* -----------------------------------------------------
    비추천 스타일 목록
-   items: 비추천 스타일 이름
+   items: { name: 비추천 스타일 이름, reason: 왜 이 얼굴형엔
+           안 어울리는지 구체적으로 풀어쓴 설명 } — 항목마다
+           다른, 이해하기 쉬운 이유를 담는다 (템플릿 문구 재사용 X)
    confidence: "high"  = faceShapePrinciples와 직접 대응되는
-               항목 (예: Round의 "일자단발"은 "블런트컷 회피"
-               원칙과 직접 연결)
+               항목
                "low"   = 원 문헌에 명시적 근거가 약하고
                관례적으로 통용되는 추정에 가까운 항목
    ----------------------------------------------------- */
@@ -1405,44 +1406,44 @@ const worstHairDB = {
 
   "Round Face":{
     items:[
-      "무거운 일자단발",
-      "볼륨 없는 생머리",
-      "짧은 숏컷"
+      { name:"무거운 일자단발", reason:"귀 밑에서 일자로 뚝 자른 단발은 옆으로 볼륨이 생겨서 얼굴이 더 둥글고 넓어 보일 수 있어요." },
+      { name:"볼륨 없는 생머리", reason:"층 없이 밋밋하게 떨어지는 생머리는 세로 라인을 살려주지 못해서 얼굴이 더 넓적해 보일 수 있어요." },
+      { name:"짧은 숏컷", reason:"귀 위로 짧게 자른 숏컷은 볼 라인을 그대로 드러내서 둥근 느낌을 가려주지 못해요." }
     ],
     confidence:"high"
   },
 
   "Oval Face":{
     items:[
-      "픽시컷 (매우 짧은 길이)",
-      "숏컷 + 웨이브펌 조합"
+      { name:"픽시컷 (매우 짧은 길이)", reason:"아주 짧게 자른 픽시컷은 균형 잡힌 얼굴 비율을 가려버려서 오히려 원래 장점을 살리지 못해요." },
+      { name:"숏컷 + 웨이브펌 조합", reason:"짧은 길이에 웨이브까지 더하면 볼륨이 옆으로 퍼져서 자연스러운 균형이 깨질 수 있어요." }
     ],
     confidence:"high"
   },
 
   "Heart Face":{
     items:[
-      "정수리 볼륨 스타일",
-      "짧은 앞머리",
-      "위쪽 집중 펌"
+      { name:"정수리 볼륨 스타일", reason:"정수리에 볼륨을 준 스타일은 이마를 더 넓어 보이게 해서 위가 넓고 아래가 좁은 느낌을 강조해요." },
+      { name:"짧은 앞머리", reason:"짧고 일자로 자른 앞머리는 넓은 이마를 그대로 드러내서 얼굴 위쪽이 더 커 보이게 해요." },
+      { name:"위쪽 집중 펌", reason:"머리 위쪽에만 볼륨을 주는 펌은 좁은 턱과 대비되어 얼굴형이 더 불균형해 보일 수 있어요." }
     ],
     confidence:"high"
   },
 
   "Long Face":{
     items:[
-      "초장발 생머리",
-      "높은 포마드",
-      "정수리 볼륨펌"
+      { name:"초장발 생머리", reason:"허리까지 오는 긴 생머리는 세로선을 강조해서 얼굴이 실제보다 더 길어 보이게 해요." },
+      { name:"높은 포마드", reason:"정수리 위로 높게 세운 스타일은 세로 길이를 한층 더 늘려 보이게 만들어요." },
+      { name:"정수리 볼륨펌", reason:"머리 위쪽에 볼륨을 주는 펌은 얼굴 길이를 더 강조해서 역효과가 날 수 있어요." }
     ],
     confidence:"high"
   },
 
   "Square Face":{
     items:[
-      "완전 밀착 숏컷",
-      "일자 단발",
-      "턱선 강조 스타일"
+      { name:"완전 밀착 숏컷", reason:"머리에 완전히 붙는 짧은 숏컷은 각진 턱선을 그대로 드러내서 더 딱딱해 보일 수 있어요." },
+      { name:"일자 단발", reason:"일자로 뚝 잘린 단발선이 각진 턱선과 나란히 이어져서 각진 느낌을 두 배로 강조해요." },
+      { name:"턱선 강조 스타일", reason:"턱 주변에 볼륨이나 포인트를 주는 스타일은 이미 뚜렷한 턱선을 더 도드라지게 만들어요." }
     ],
     confidence:"high"
   }
@@ -1814,8 +1815,7 @@ async function runRecommendation(){
     principleInfo
       ? `<p class="principle-box">
           <strong>근거 원칙</strong><br>
-          ${principleInfo.principle}<br>
-          <span class="source-text">출처: ${principleInfo.source}</span>
+          ${principleInfo.principle}
         </p>`
       : "";
 
@@ -1886,8 +1886,7 @@ async function runRecommendation(){
     principleInfo
       ? `<p class="principle-box">
           <strong>근거 원칙</strong><br>
-          ${principleInfo.principle}<br>
-          <span class="source-text">출처: ${principleInfo.source}</span>
+          ${principleInfo.principle}
         </p>`
       : "";
 
@@ -1903,11 +1902,11 @@ async function runRecommendation(){
 
         <div class="hair-info">
 
-          <h4>${item}</h4>
+          <h4>${item.name}</h4>
 
           <p>
           <strong>비추천 이유</strong><br>
-          해당 스타일은 ${shapeKorean[shape]} 얼굴형의 단점을 더 강조할 수 있어 피하는 것이 좋습니다.
+          ${item.reason}
           </p>
 
           ${principleHTML}
