@@ -12,6 +12,7 @@ const auth = firebase.auth();
 let currentImage = null;
 let faceLandmarks = null;
 let gender = "female";
+let activeCamera = null;
 let lastRecommend = [];
 let authMode = "login";
 
@@ -591,6 +592,11 @@ function onResults(results){
 
 async function startCamera(){
 
+  if(activeCamera){
+    activeCamera.stop();
+    activeCamera = null;
+  }
+
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
     alert("이 브라우저에서는 카메라를 사용할 수 없습니다.");
     return;
@@ -654,6 +660,8 @@ async function startCamera(){
   });
 
   camera.start();
+
+  activeCamera = camera;
 }
 
 async function capturePhoto(){
@@ -691,6 +699,21 @@ async function capturePhoto(){
   );
 
   ctx.restore();
+
+  /* 촬영 즉시 웹캠 루프를 멈춘다. 계속 켜둔 채로 두면 백그라운드의
+     onFrame이 (좌우반전되지 않은) 원본 비디오 프레임을 계속
+     faceMesh로 보내서, 아래에서 다시 계산하는 "정방향 보정 사진
+     기준" 랜드마크를 뒤이어 덮어써버리는 문제가 있었다. 그 결과
+     분석 상세의 측정선 오버레이가 실제 사진과 어긋나 보였음. */
+  if(activeCamera){
+    activeCamera.stop();
+    activeCamera = null;
+  }
+
+  if(video.srcObject){
+    video.srcObject.getTracks().forEach(track => track.stop());
+    video.srcObject = null;
+  }
 
   currentImage =
   canvas.toDataURL("image/png");
