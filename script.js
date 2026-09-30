@@ -726,6 +726,17 @@ async function capturePhoto(){
 
   faceLandmarks = null;
 
+  /* preview.src를 막 바꾼 직후라 이미지가 디코딩되기 전일 수 있다.
+     로드가 끝나기 전에 faceMesh.send(preview)를 호출하면 이전
+     프레임이나 빈 이미지를 기준으로 랜드마크를 계산해버려서,
+     실제 저장된 사진과 좌표가 어긋나는 원인이 될 수 있으므로
+     완전히 로드될 때까지 기다린다. */
+  if(!(preview.complete && preview.naturalWidth > 0)){
+    await new Promise((resolve)=>{
+      preview.onload = resolve;
+    });
+  }
+
   await faceMesh.send({
     image:preview
   });
