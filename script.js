@@ -239,6 +239,91 @@ const skinToneDB = {
 
 };
 
+/* -----------------------------------------------------
+   [피부톤 4계절 확장] 기존 웜/쿨/뉴트럴 판정은 그대로 두고,
+   웜·쿨 톤에 한해 이미 계산해둔 ITA(밝기) 값으로 한 단계 더
+   세분화한다 — 한국 퍼스널컬러 업계에서 통용되는 봄웜/여름쿨/
+   가을웜/겨울쿨 분류. 뉴트럴톤은 4계절 어느 쪽에도 속하지 않는
+   경계 영역이라 기존과 동일하게 세부 계절 없이 유지한다.
+   ITA >= 28("중간" 밝기 이상)을 밝은 쪽(봄/여름), 미만을
+   깊은 쪽(가을/겨울)으로 나눈다 — itaToBrightness()의 "중간"
+   경계값을 그대로 재사용한 것.
+   ----------------------------------------------------- */
+const SEASON_ITA_THRESHOLD = 28;
+
+const seasonDB = {
+
+  springWarm:{
+    name:"봄웜",
+    recommend:[
+      "캐러멜 브라운",
+      "허니 브라운",
+      "오렌지 브라운"
+    ],
+    avoid:[
+      "애쉬 그레이",
+      "버건디",
+      "플래티넘"
+    ]
+  },
+
+  autumnWarm:{
+    name:"가을웜",
+    recommend:[
+      "초코 브라운",
+      "카키 브라운",
+      "다크 카라멜"
+    ],
+    avoid:[
+      "애쉬 그레이",
+      "실버",
+      "플래티넘"
+    ]
+  },
+
+  summerCool:{
+    name:"여름쿨",
+    recommend:[
+      "로즈 브라운",
+      "라벤더 애쉬",
+      "애쉬 브라운"
+    ],
+    avoid:[
+      "오렌지 브라운",
+      "골드 브라운",
+      "레드 브라운"
+    ]
+  },
+
+  winterCool:{
+    name:"겨울쿨",
+    recommend:[
+      "블루 블랙",
+      "다크 애쉬",
+      "버건디 브라운"
+    ],
+    avoid:[
+      "오렌지 브라운",
+      "골드 브라운",
+      "베이지 브라운"
+    ]
+  }
+
+};
+
+function getSeason(tone, ita){
+
+  if(tone === "warm"){
+    return ita >= SEASON_ITA_THRESHOLD ? "springWarm" : "autumnWarm";
+  }
+
+  if(tone === "cool"){
+    return ita >= SEASON_ITA_THRESHOLD ? "summerCool" : "winterCool";
+  }
+
+  return null;
+}
+
 /* ===== 피부톤 분석 =====
 
    [개선] 기존에는 사진 전체(배경·옷·머리카락 포함) 픽셀을 평균 내서
@@ -402,7 +487,7 @@ function detectSkinTone(){
 
   if(n === 0){
     // 랜드마크 기반 샘플링이 실패하면(드묾) 기존 방식으로 대체
-    return "neutral";
+    return { tone:"neutral", ita:0 };
   }
 
   r /= n; g /= n; b /= n;
@@ -424,14 +509,14 @@ function detectSkinTone(){
      b*가 높을수록 황색(웜), 낮을수록 상대적으로 붉은/핑크(쿨) 기운이
      강하다는 게 피부색 과학에서 쓰는 실제 기준입니다. */
   if(lab.b > 21){
-    return "warm";
+    return { tone:"warm", ita };
   }
 
   if(lab.b < 15){
-    return "cool";
+    return { tone:"cool", ita };
   }
 
-  return "neutral";
+  return { tone:"neutral", ita };
 }
 
 /* ===== 성별 ===== */
@@ -1581,8 +1666,20 @@ async function runRecommendation(){
   const shape =
   analysis.shape;
 
-  const skinTone =
+  const skinResult =
   detectSkinTone();
+
+  const skinTone = skinResult.tone;
+
+  const season = getSeason(skinTone, skinResult.ita);
+
+  const seasonName = season ? seasonDB[season].name : null;
+
+  const skinToneLabel = seasonName
+    ? `${skinToneDB[skinTone].name} · ${seasonName}`
+    : skinToneDB[skinTone].name;
+
+  const colorSource = season ? seasonDB[season] : skinToneDB[skinTone];
 
   const recommend =
   hairDetail(
@@ -1603,7 +1700,7 @@ async function runRecommendation(){
   document
   .getElementById("skinToneResult")
   .innerText =
-  skinToneDB[skinTone].name;
+  skinToneLabel;
 
   document
   .getElementById("genderResult")
@@ -1651,13 +1748,14 @@ async function runRecommendation(){
   document
   .getElementById("mainReason")
   .innerText =
-  `${shapeKorean[shape]} 얼굴형과 ${skinToneDB[skinTone].name} 분석 결과를 바탕으로 헤어스타일과 헤어 컬러를 추천합니다.`;
+  `${shapeKorean[shape]} 얼굴형과 ${skinToneLabel} 분석 결과를 바탕으로 헤어스타일과 헤어 컬러를 추천합니다.`;
 
   const skinText =
   document.getElementById("skinToneDescription");
 
-  skinText.innerText =
-  `${skinToneDB[skinTone].name}으로 분석되었습니다. 피부톤에 맞는 헤어 컬러를 함께 추천합니다.`;
+  skinText.innerText = season
+    ? `${skinToneDB[skinTone].name}(${seasonName})으로 분석되었습니다. 퍼스널컬러 4계절 기준 세부 톤에 맞는 헤어 컬러를 함께 추천합니다.`
+    : `${skinToneDB[skinTone].name}으로 분석되었습니다. 웜/쿨 어느 쪽으로도 치우치지 않는 경계 영역이라 세부 계절 구분 없이 추천합니다.`;
 
   const bestColorRow =
   document.getElementById("bestColorRow");
@@ -1668,7 +1766,7 @@ async function runRecommendation(){
   bestColorRow.innerHTML =
   "<strong>추천 컬러</strong>";
 
-  skinToneDB[skinTone]
+  colorSource
   .recommend
   .forEach(color=>{
 
@@ -1680,7 +1778,7 @@ async function runRecommendation(){
   worstColorRow.innerHTML =
   "<strong>비추천 컬러</strong>";
 
-  skinToneDB[skinTone]
+  colorSource
   .avoid
   .forEach(color=>{
 
