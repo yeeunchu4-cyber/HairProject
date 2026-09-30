@@ -924,42 +924,43 @@ function getAnalysisReason(analysis){
    A Hybrid Approach to Building Face Shape Classifier for
    Hairstyle Recommender System. Expert Systems With
    Applications, 120, 14-32.
-   해당 논문은 "미용 전문가 가이드라인에 따른 기하학적 규칙"으로
-   얼굴형-헤어스타일 매칭을 정의한다고 명시하며, 아래 principle은
-   그 가이드라인 계열(다수의 헤어스타일 전문가 자료에서도
-   공통적으로 확인되는 원칙)을 요약한 것이다.
-   confidence: "high" = 문헌에서 명확히 뒷받침됨,
-               "low"  = 직접적인 문헌 근거가 약하고 관례적 추정에 가까움
+   아래 principle은 논문 본문 Algorithm 1(IsItSuitable)에 실제
+   명시된 길이(length)·스타일(style)·앞머리(bang)·레이어드(layered)
+   조합별 추천/비추천 판정 규칙을 그대로 옮긴 것이다. 이 알고리즘
+   자체는 Derrick(2017), Hong(2013)의 미용 전문가 가이드라인을
+   인코딩한 것이라고 논문이 명시하고 있다.
+   confidence: "high" = Algorithm 1에서 해당 얼굴형의 추천/비추천
+               조건이 명시적으로 정의되어 있음
    ----------------------------------------------------- */
 const faceShapePrinciples = {
 
   "Oval Face":{
-    principle:"이마·광대·턱 비율이 이미 균형 잡혀 있어 대부분의 스타일을 무난히 소화할 수 있는 '만능형' 얼굴형입니다.",
-    source:"Pasupa, Sunhem & Loo (2019), Expert Systems With Applications",
+    principle:"Algorithm 1 기준 중간 길이·사이드로 넘긴 앞머리·혼합 스타일 등 대부분의 조합이 추천되며, 픽시컷이나 '짧은 길이+웨이브' 조합만 비추천으로 판정됩니다.",
+    source:"Pasupa, Sunhem & Loo (2019), Expert Systems With Applications — Algorithm 1",
     confidence:"high"
   },
 
   "Round Face":{
-    principle:"세로 길이감과 각도를 더해 둥근 인상을 완화하는 방향이 권장되며, 턱선에서 뚝 끊기는 블런트컷은 둥근 느낌을 강조하므로 피합니다.",
-    source:"Pasupa, Sunhem & Loo (2019), Expert Systems With Applications",
+    principle:"Algorithm 1 기준 중간 길이, '긴 길이+혼합 스타일', 레이어드컷, 사이드로 넘긴 앞머리가 추천되며, 일자로 자른 블런트 뱅은 비추천으로 판정됩니다.",
+    source:"Pasupa, Sunhem & Loo (2019), Expert Systems With Applications — Algorithm 1",
     confidence:"high"
   },
 
   "Square Face":{
-    principle:"레이어·웨이브·사이드뱅 등으로 각진 턱선과 넓은 이마를 부드럽게 감싸는 방향이 권장됩니다.",
-    source:"Pasupa, Sunhem & Loo (2019), Expert Systems With Applications",
+    principle:"Algorithm 1 기준 웨이브펌, 사이드로 넘긴 앞머리, 레이어드컷이 추천되며, 블런트 뱅·짧은 길이(픽시컷 포함)·긴 생머리는 비추천으로 판정됩니다.",
+    source:"Pasupa, Sunhem & Loo (2019), Expert Systems With Applications — Algorithm 1",
     confidence:"high"
   },
 
   "Heart Face":{
-    principle:"넓은 이마와 좁은 턱 사이의 균형을 맞추기 위해 턱 주변에 볼륨을 주고, 이마 쪽 볼륨은 줄이는 방향이 권장됩니다.",
-    source:"Pasupa, Sunhem & Loo (2019), Expert Systems With Applications",
+    principle:"Algorithm 1 기준 웨이브펌과 사이드로 넘긴 앞머리가 추천되며, 사이드가 아닌 일반 앞머리나 레이어드(슬라이드) 스타일은 비추천으로 판정됩니다.",
+    source:"Pasupa, Sunhem & Loo (2019), Expert Systems With Applications — Algorithm 1",
     confidence:"high"
   },
 
   "Long Face":{
-    principle:"세로 길이를 추가로 늘리지 않고(정수리 볼륨·장발 지양) 옆쪽에 볼륨과 각도를 더해 길어 보이는 인상을 완화하는 방향이 권장됩니다.",
-    source:"Pasupa, Sunhem & Loo (2019), Expert Systems With Applications",
+    principle:"Algorithm 1 기준(논문의 oblong 얼굴형) 앞머리가 있는 스타일이나 웨이브펌이 추천되며, 앞머리 없는 긴 생머리나 픽시컷은 비추천으로 판정됩니다.",
+    source:"Pasupa, Sunhem & Loo (2019), Expert Systems With Applications — Algorithm 1",
     confidence:"high"
   }
 
@@ -1239,11 +1240,10 @@ const worstHairDB = {
 
   "Oval Face":{
     items:[
-      "과도한 볼륨펌",
-      "너무 무거운 뱅",
-      "극단적 숏컷"
+      "픽시컷 (매우 짧은 길이)",
+      "숏컷 + 웨이브펌 조합"
     ],
-    confidence:"low"
+    confidence:"high"
   },
 
   "Heart Face":{
