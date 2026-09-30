@@ -815,6 +815,95 @@ function getAlignedLandmarks(landmarksRaw){
   return aligned;
 }
 
+/* -----------------------------------------------------
+   [분석 상세 - 시각화] 실제 업로드 사진 위에 판별 근거로 쓰인
+   측정선(세로/가로, 턱/광대, 이마/턱, 턱 각도)을 그려서 보여준다.
+   landmarksRaw는 MediaPipe 원본(0~1 정규화, 회전 보정 전) 좌표를
+   그대로 쓴다 — 캔버스에 표시되는 원본 사진과 좌표계가 그대로
+   맞아야 하므로, 분류 계산에 쓰인 회전 보정 좌표(lm)와는 별개다.
+   ----------------------------------------------------- */
+function drawMeasurementOverlay(landmarksRaw, values){
+
+  const canvas =
+  document.getElementById("measureCanvas");
+
+  if(!canvas || !currentImage) return;
+
+  const ctx = canvas.getContext("2d");
+
+  const img = new Image();
+
+  img.onload = ()=>{
+
+    const size = 320;
+
+    canvas.width = size;
+    canvas.height = size;
+
+    const scale =
+    Math.min(size / img.naturalWidth, size / img.naturalHeight);
+
+    const drawW = img.naturalWidth * scale;
+    const drawH = img.naturalHeight * scale;
+    const offX = (size - drawW) / 2;
+    const offY = (size - drawH) / 2;
+
+    ctx.clearRect(0, 0, size, size);
+    ctx.drawImage(img, offX, offY, drawW, drawH);
+
+    const pt = (i)=>({
+      x: offX + landmarksRaw[i].x * drawW,
+      y: offY + landmarksRaw[i].y * drawH
+    });
+
+    function line(a, b, color){
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+
+      [a, b].forEach(p=>{
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    line(pt(10), pt(152), "#ef4444");   // 세로(이마-턱)
+    line(pt(234), pt(454), "#ef4444");  // 가로(좌-우)
+    line(pt(172), pt(397), "#3b82f6");  // 턱선
+    line(pt(93), pt(323), "#3b82f6");   // 광대
+    line(pt(103), pt(332), "#22c55e");  // 이마
+    line(pt(172), pt(152), "#f59e0b");  // 턱 각도(왼쪽 변)
+    line(pt(397), pt(152), "#f59e0b");  // 턱 각도(오른쪽 변)
+
+    ctx.font = "bold 13px 'Malgun Gothic', sans-serif";
+    ctx.fillStyle = "#111827";
+    ctx.fillRect(6, 6, 128, 78);
+    ctx.globalAlpha = 0.75;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(6, 6, 128, 78);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "#111827";
+    ctx.fillText(`세로/가로 ${values.lw.toFixed(2)}`, 12, 22);
+    ctx.fillText(`턱/광대 ${values.jc.toFixed(2)}`, 12, 40);
+    ctx.fillText(`이마/턱 ${values.fj.toFixed(2)}`, 12, 58);
+    ctx.fillText(`턱 각도 ${values.ja.toFixed(0)}°`, 12, 76);
+  };
+
+  img.src = currentImage;
+
+  canvas.style.display = "block";
+
+  const legend =
+  document.getElementById("measureLegend");
+
+  if(legend) legend.style.display = "flex";
+}
+
 function linearScore(
   value,
   target,
@@ -1554,6 +1643,11 @@ async function runRecommendation(){
   visualText.innerText =
   `${shapeKorean[shape]} 얼굴형입니다. 얼굴형 결과를 한눈에 이해할 수 있도록 실루엣으로 함께 표시했습니다.`;
 
+  drawMeasurementOverlay(
+    faceLandmarks,
+    { lw, jc, fj, ja }
+  );
+
   document
   .getElementById("mainReason")
   .innerText =
@@ -1833,6 +1927,15 @@ function resetPage(){
   const icon = document.getElementById("faceShapeIcon");
   icon.src = "";
   icon.style.display = "none";
+
+  const measureCanvas = document.getElementById("measureCanvas");
+  if(measureCanvas){
+    measureCanvas.style.display = "none";
+    measureCanvas.getContext("2d").clearRect(0, 0, measureCanvas.width, measureCanvas.height);
+  }
+
+  const measureLegend = document.getElementById("measureLegend");
+  if(measureLegend) measureLegend.style.display = "none";
 }
 
 /* ===== 브라우저 뒤로가기 처리 ===== */
