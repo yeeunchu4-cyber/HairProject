@@ -2004,7 +2004,125 @@ async function runRecommendation(){
   }
 }
 
-/* ===== 초기화 ===== */
+/* ===== 결과 저장 / 공유 =====
+
+   html2canvas로 .result-card(얼굴형·피부톤·추천 결과가 모여있는
+   영역)를 그대로 캡처한다. 저장/공유/다시하기 버튼 자체는
+   결과 이미지에 들어가면 안 되므로 .no-capture 클래스로 표시해두고
+   ignoreElements로 제외한다.
+   ----------------------------------------------------------- */
+
+async function captureResultCanvas(){
+
+  if(!faceLandmarks){
+    alert("먼저 분석을 완료해주세요!");
+    return null;
+  }
+
+  const target =
+  document.querySelector(".result-card");
+
+  try{
+
+    return await html2canvas(target, {
+      backgroundColor:"#ffffff",
+      scale:2,
+      useCORS:true,
+      ignoreElements:(el)=>
+        el.classList && el.classList.contains("no-capture")
+    });
+
+  }
+  catch(error){
+
+    console.error(error);
+    alert("이미지를 생성하는 중 오류가 발생했습니다.");
+    return null;
+
+  }
+}
+
+function getResultFileName(){
+
+  const shapeName =
+  document.getElementById("faceShapeResult").innerText || "결과";
+
+  return `헤어스타일추천_${shapeName}.png`;
+}
+
+async function saveResultAsImage(){
+
+  const canvas = await captureResultCanvas();
+
+  if(!canvas) return;
+
+  const link =
+  document.createElement("a");
+
+  link.download = getResultFileName();
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+
+async function shareResult(){
+
+  const canvas = await captureResultCanvas();
+
+  if(!canvas) return;
+
+  const fileName = getResultFileName();
+
+  const shapeName =
+  document.getElementById("faceShapeResult").innerText || "";
+
+  canvas.toBlob(async (blob)=>{
+
+    if(!blob){
+      alert("이미지를 생성하는 중 오류가 발생했습니다.");
+      return;
+    }
+
+    const file =
+    new File([blob], fileName, { type:"image/png" });
+
+    const shareData = {
+      files:[file],
+      title:"Hair Style Finder 분석 결과",
+      text:`내 얼굴형은 ${shapeName}! 어울리는 헤어스타일을 확인해보세요.`
+    };
+
+    const canShareFile =
+    navigator.canShare &&
+    navigator.canShare({ files:[file] });
+
+    if(canShareFile){
+
+      try{
+        await navigator.share(shareData);
+      }
+      catch(error){
+        // 사용자가 공유를 취소한 경우(AbortError)는 정상 흐름이라 무시
+        if(error.name !== "AbortError"){
+          console.error(error);
+        }
+      }
+
+      return;
+    }
+
+    // 파일 공유(Web Share API Level 2)를 지원하지 않는 환경
+    // (대부분의 데스크톱 브라우저) → 이미지 다운로드로 대체
+    const link =
+    document.createElement("a");
+
+    link.download = fileName;
+    link.href = URL.createObjectURL(blob);
+    link.click();
+
+    alert("이 브라우저는 공유 기능을 지원하지 않아 이미지를 다운로드했습니다. 다운로드된 이미지로 직접 공유해주세요!");
+
+  }, "image/png");
+}
 
 /* ===== 초기화 ===== */
 
