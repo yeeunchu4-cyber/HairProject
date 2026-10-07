@@ -1387,6 +1387,59 @@ const hairDB = [
   point:"성숙하고 깔끔한 이미지를 연출할 수 있습니다.",
   note:"참고: 여성 스타일링 원칙은 각진 턱선을 '완화'하는 방향이지만, 남성 그루밍에서는 뚜렷한 턱선을 매력 포인트로 '강조'하는 것이 일반적인 관례입니다. 이 항목은 그 관례를 따른 것으로, 원 문헌의 여성 기준 원칙과는 방향이 반대입니다.",
   tags:["Square 추천","정돈됨","클래식"]
+},
+
+/* -----------------------------------------------------
+   아래 4개는 추천 스타일 종류를 확장하면서 추가한 항목이다.
+   images/ 폴더에 이미 있었지만 어떤 얼굴형에도 연결되어 있지
+   않던 사진들을, Algorithm 1(script.js 상단 faceShapePrinciples
+   주석 참고)의 추천 조건에 맞는 얼굴형에 배정했다. 특히 가장
+   항목이 적었던 Heart Face(여성), Square Face(여성),
+   Long Face(여성)를 우선 보강했다.
+   ----------------------------------------------------- */
+{
+  name:"트위스터펌",
+  image:"images/Twisterperm.jpg",
+  gender:"female",
+  primaryFaceShape:"Heart Face",
+  type:"long",
+  style:"casual",
+  reason:"Heart Face는 풍성한 웨이브나 컬이 있는 스타일이 이마와 턱의 균형을 맞춰줘요. 트위스터펌처럼 볼륨감 있는 롱 펌이 잘 어울립니다.",
+  point:"자연스러운 웨이브와 볼륨감이 좁은 턱선 주변을 부드럽게 채워줍니다.",
+  tags:["Heart 추천","볼륨","개성있는 컬"]
+},
+{
+  name:"언발란스컷",
+  image:"images/Unbalancedcut.jpg",
+  gender:"female",
+  primaryFaceShape:"Heart Face",
+  type:"short",
+  style:"clean",
+  reason:"Heart Face는 사이드로 넘긴 비대칭 앞머리가 넓은 이마를 자연스럽게 가려주면서 세련된 느낌을 줍니다.",
+  point:"한쪽으로 쏠린 언발란스 라인이 이목구비에 포인트를 주고 개성 있는 분위기를 만듭니다.",
+  tags:["Heart 추천","사이드뱅","비대칭"]
+},
+{
+  name:"웨이비펌",
+  image:"images/Wavyperm.jpg",
+  gender:"female",
+  primaryFaceShape:"Square Face",
+  type:"long",
+  style:"soft",
+  reason:"Square Face는 부드러운 웨이브 펌이 각진 턱선을 자연스럽게 감싸줘요. 느슨한 웨이브와 사이드 뱅이 각진 느낌을 완화합니다.",
+  point:"굵은 웨이브가 얼굴 옆선을 부드럽게 흘러내리며 부드러운 인상을 더해줍니다.",
+  tags:["Square 추천","웨이브","부드러움"]
+},
+{
+  name:"블런트컷",
+  image:"images/Bluntcut.jpg",
+  gender:"female",
+  primaryFaceShape:"Long Face",
+  type:"medium",
+  style:"clean",
+  reason:"Long Face는 세로 길이를 과하게 늘리지 않는 미디엄 길이가 잘 어울려요. 어깨 위에서 깔끔하게 떨어지는 블런트컷이 시선을 분산시켜줍니다.",
+  point:"턱선보다 아래, 어깨 쪽에서 끝나는 라인이 얼굴이 길어 보이는 느낌을 줄여줍니다.",
+  tags:["Long 추천","단정함","미디엄 기장"]
 }
 ];
 
