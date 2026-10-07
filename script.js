@@ -8,6 +8,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+const db = firebase.firestore();
 
 let currentImage = null;
 let faceLandmarks = null;
@@ -2064,16 +2065,104 @@ async function saveResultAsImage(){
   link.click();
 }
 
+/* -----------------------------------------------------
+   [공유하기] Firestore(sharedResults 컬렉션)에 사진 썸네일 +
+   선택 옵션을 업로드하고, 그 문서 ID로 "?shared=<id>" 링크를
+   만들어 공유한다. 저장용 "결과 링크 저장"(localStorage, 이
+   기기에서만 재현)과 달리, 이 링크는 다른 사람이 다른 기기에서
+   열어도 똑같은 분석 결과를 볼 수 있다.
+   Firestore 업로드가 실패하면(미설정, 오프라인 등) 예전 방식인
+   이미지 파일 공유/다운로드로 자동 대체한다.
+   ----------------------------------------------------- */
+
 async function shareResult(){
+
+  if(!currentImage || !faceLandmarks){
+    alert("먼저 분석을 완료해주세요!");
+    return;
+  }
+
+  const shapeName =
+  document.getElementById("faceShapeResult").innerText || "";
+
+  let shareUrl;
+
+  try{
+
+    const thumbImage = await buildThumbnailDataUrl(currentImage);
+
+    // Firestore가 프로젝트에서 아직 켜져 있지 않거나 네트워크가
+    // 불안정하면 요청이 응답 없이 계속 재시도만 하며 멈춰있을 수
+    // 있다 — 무한정 기다리지 않도록 타임아웃을 걸고, 넘기면
+    // 즉시 이미지 공유 방식으로 대체한다.
+    const addPromise = db.collection("sharedResults").add({
+      image: thumbImage,
+      gender: gender,
+      hairLength: document.getElementById("hairLengthSelect").value,
+      style: document.getElementById("styleSelect").value,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    const timeoutPromise = new Promise((_, reject)=>{
+      setTimeout(()=> reject(new Error("firestore-timeout")), 8000);
+    });
+
+    const docRef = await Promise.race([addPromise, timeoutPromise]);
+
+    shareUrl =
+    `${location.origin}${location.pathname}?shared=${docRef.id}#analyze`;
+
+  }
+  catch(error){
+
+    console.error("공유 링크 업로드 실패, 이미지 공유로 대체:", error);
+    await shareResultAsImageFallback(shapeName);
+    return;
+
+  }
+
+  const shareData = {
+    title:"Hair Style Finder 분석 결과",
+    text:`내 얼굴형은 ${shapeName}! 어울리는 헤어스타일을 확인해보세요.`,
+    url: shareUrl
+  };
+
+  if(navigator.share){
+
+    try{
+      await navigator.share(shareData);
+    }
+    catch(error){
+      // 사용자가 공유를 취소한 경우(AbortError)는 정상 흐름이라 무시
+      if(error.name !== "AbortError"){
+        console.error(error);
+      }
+    }
+
+    return;
+  }
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+
+    navigator.clipboard.writeText(shareUrl)
+      .then(()=> alert(`공유 링크가 복사되었습니다!\n\n${shareUrl}`))
+      .catch(()=> alert(`공유 링크: ${shareUrl}`));
+
+  }
+  else{
+
+    alert(`공유 링크: ${shareUrl}`);
+
+  }
+}
+
+async function shareResultAsImageFallback(shapeName){
 
   const canvas = await captureResultCanvas();
 
   if(!canvas) return;
 
   const fileName = getResultFileName();
-
-  const shapeName =
-  document.getElementById("faceShapeResult").innerText || "";
 
   canvas.toBlob(async (blob)=>{
 
@@ -2248,32 +2337,60 @@ async function saveResultLink(){
 }
 
 /* -----------------------------------------------------
-   [결과 링크 복원] 주소에 ?saved=<id>가 있으면, localStorage에
+   [결과 링크 복원] 주소에 ?saved=<id>(이 기기 localStorage) 또는
+   ?shared=<id>(Firestore, 다른 사람이 공유한 링크)가 있으면,
    저장해둔 사진·옵션을 그대로 불러와 업로드 → 분석까지 자동으로
    재현한다. 페이지 맨 아래, 다른 함수들이 다 정의된 뒤에 실행.
    ----------------------------------------------------- */
 
 async function restoreSavedResultFromUrl(){
 
-  const savedId =
-  new URLSearchParams(location.search).get("saved");
+  const params = new URLSearchParams(location.search);
+  const savedId = params.get("saved");
+  const sharedId = params.get("shared");
 
-  if(!savedId) return;
+  if(!savedId && !sharedId) return;
 
-  const raw =
-  localStorage.getItem(SAVED_RESULT_PREFIX + savedId);
+  let data = null;
 
-  if(!raw) return;
+  if(savedId){
 
-  let data;
+    const raw =
+    localStorage.getItem(SAVED_RESULT_PREFIX + savedId);
 
-  try{
-    data = JSON.parse(raw);
+    if(raw){
+      try{
+        data = JSON.parse(raw);
+      }
+      catch(error){
+        console.error(error);
+      }
+    }
+
   }
-  catch(error){
-    console.error(error);
-    return;
+  else if(sharedId){
+
+    try{
+
+      const doc =
+      await db.collection("sharedResults").doc(sharedId).get();
+
+      if(doc.exists){
+        data = doc.data();
+      }
+      else{
+        alert("공유된 결과를 찾을 수 없습니다. 링크가 만료되었거나 잘못됐을 수 있어요.");
+      }
+
+    }
+    catch(error){
+      console.error(error);
+      alert("공유된 결과를 불러오지 못했습니다.");
+    }
+
   }
+
+  if(!data) return;
 
   showPage("analyzePage");
   setGender(data.gender === "male" ? "male" : "female");
