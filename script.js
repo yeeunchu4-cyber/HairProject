@@ -2124,6 +2124,201 @@ async function shareResult(){
   }, "image/png");
 }
 
+/* -----------------------------------------------------
+   [결과 링크 저장] 다른 사람과 공유하는 용도가 아니라, "같은
+   브라우저에서 나중에 다시 보기" 용도다. 서버에 저장하지 않고
+   localStorage에 사진 원본 + 선택했던 옵션(성별/머리길이/스타일)만
+   저장해두고, 그 링크로 들어오면 같은 사진으로 분석을 자동으로
+   다시 돌려서 동일한 결과를 재현한다.
+   최근 5개까지만 보관 — 사진을 base64로 들고 있어서 무한정
+   쌓이면 localStorage 용량(보통 5~10MB)을 금방 채울 수 있음.
+   ----------------------------------------------------- */
+
+const SAVED_RESULT_PREFIX = "hsf_result_";
+const SAVED_RESULT_INDEX_KEY = "hsf_result_ids";
+const SAVED_RESULT_MAX = 5;
+const SAVED_RESULT_THUMB_MAX_SIZE = 480;
+
+/* 원본 사진을 그대로 저장하면 localStorage 용량(보통 5~10MB)을
+   사진 한 장으로 다 써버릴 수 있다. 긴 변 기준
+   SAVED_RESULT_THUMB_MAX_SIZE로 줄이고 JPEG로 재인코딩해서
+   용량을 크게 낮춘다 — 저장용일 뿐 분석 정확도에는 영향 없음. */
+function buildThumbnailDataUrl(sourceDataUrl){
+
+  return new Promise((resolve, reject)=>{
+
+    const img = new Image();
+
+    img.onload = ()=>{
+
+      const scale =
+      Math.min(1, SAVED_RESULT_THUMB_MAX_SIZE / Math.max(img.naturalWidth, img.naturalHeight));
+
+      const w = Math.round(img.naturalWidth * scale);
+      const h = Math.round(img.naturalHeight * scale);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+
+      resolve(canvas.toDataURL("image/jpeg", 0.75));
+    };
+
+    img.onerror = reject;
+    img.src = sourceDataUrl;
+  });
+}
+
+async function saveResultLink(){
+
+  if(!currentImage || !faceLandmarks){
+    alert("먼저 분석을 완료해주세요!");
+    return;
+  }
+
+  const id = String(Date.now());
+
+  let thumbImage;
+
+  try{
+    thumbImage = await buildThumbnailDataUrl(currentImage);
+  }
+  catch(error){
+    console.error(error);
+    alert("사진을 저장용으로 압축하는 중 오류가 발생했습니다.");
+    return;
+  }
+
+  const data = {
+    image: thumbImage,
+    gender: gender,
+    hairLength: document.getElementById("hairLengthSelect").value,
+    style: document.getElementById("styleSelect").value,
+    savedAt: new Date().toISOString()
+  };
+
+  let ids = JSON.parse(
+    localStorage.getItem(SAVED_RESULT_INDEX_KEY) || "[]"
+  );
+
+  try{
+
+    ids.push(id);
+
+    while(ids.length > SAVED_RESULT_MAX){
+      const oldId = ids.shift();
+      localStorage.removeItem(SAVED_RESULT_PREFIX + oldId);
+    }
+
+    localStorage.setItem(SAVED_RESULT_PREFIX + id, JSON.stringify(data));
+    localStorage.setItem(SAVED_RESULT_INDEX_KEY, JSON.stringify(ids));
+
+  }
+  catch(error){
+
+    console.error(error);
+
+    // 용량 초과 등으로 실패하면, 방금 추가하려던 id가 인덱스에만
+    // 남아 실제 데이터 없이 "빈 링크"가 되지 않도록 되돌린다.
+    ids = ids.filter((x)=> x !== id);
+    localStorage.setItem(SAVED_RESULT_INDEX_KEY, JSON.stringify(ids));
+
+    alert("저장 공간이 부족해서 링크를 저장하지 못했습니다. 브라우저 저장공간을 정리한 뒤 다시 시도해주세요.");
+    return;
+
+  }
+
+  const url =
+  `${location.origin}${location.pathname}?saved=${id}#analyze`;
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+
+    navigator.clipboard.writeText(url)
+      .then(()=> alert(`결과 링크가 복사되었습니다!\n이 브라우저에서 아래 주소로 들어오면 같은 결과를 다시 볼 수 있어요.\n\n${url}`))
+      .catch(()=> alert(`결과 링크가 저장되었습니다. 아래 주소를 복사해두세요.\n\n${url}`));
+
+  }
+  else{
+
+    alert(`결과 링크가 저장되었습니다. 아래 주소를 복사해두세요.\n\n${url}`);
+
+  }
+}
+
+/* -----------------------------------------------------
+   [결과 링크 복원] 주소에 ?saved=<id>가 있으면, localStorage에
+   저장해둔 사진·옵션을 그대로 불러와 업로드 → 분석까지 자동으로
+   재현한다. 페이지 맨 아래, 다른 함수들이 다 정의된 뒤에 실행.
+   ----------------------------------------------------- */
+
+async function restoreSavedResultFromUrl(){
+
+  const savedId =
+  new URLSearchParams(location.search).get("saved");
+
+  if(!savedId) return;
+
+  const raw =
+  localStorage.getItem(SAVED_RESULT_PREFIX + savedId);
+
+  if(!raw) return;
+
+  let data;
+
+  try{
+    data = JSON.parse(raw);
+  }
+  catch(error){
+    console.error(error);
+    return;
+  }
+
+  showPage("analyzePage");
+  setGender(data.gender === "male" ? "male" : "female");
+
+  if(data.hairLength){
+    document.getElementById("hairLengthSelect").value = data.hairLength;
+  }
+
+  if(data.style){
+    document.getElementById("styleSelect").value = data.style;
+  }
+
+  const preview = document.getElementById("preview");
+  const video = document.getElementById("camera");
+
+  currentImage = data.image;
+  preview.src = data.image;
+  preview.style.display = "block";
+  video.style.display = "none";
+
+  const img = new Image();
+
+  img.onload = async ()=>{
+
+    try{
+      await faceMesh.send({ image:img });
+    }
+    catch(error){
+      console.error(error);
+      alert("저장된 사진으로 얼굴을 다시 인식하지 못했습니다.");
+      return;
+    }
+
+    if(!faceLandmarks){
+      alert("저장된 사진에서 얼굴을 다시 인식하지 못했습니다.");
+      return;
+    }
+
+    runRecommendation();
+
+  };
+
+  img.src = data.image;
+}
+
 /* ===== 초기화 ===== */
 
 function resetPage(){
@@ -2206,3 +2401,5 @@ function handlePageByHash(){
 
 window.addEventListener("hashchange", handlePageByHash);
 window.addEventListener("popstate", handlePageByHash);
+
+restoreSavedResultFromUrl();

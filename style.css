@@ -804,7 +804,8 @@ video,#preview{
 }
 
 .save-btn,
-.share-btn{
+.share-btn,
+.link-btn{
   background:var(--accent-soft);
   color:var(--accent);
 }
