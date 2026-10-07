@@ -2060,11 +2060,90 @@ async function runRecommendation(){
 
 /* ===== 결과 저장 / 공유 =====
 
-   html2canvas로 .result-card(얼굴형·피부톤·추천 결과가 모여있는
-   영역)를 그대로 캡처한다. 저장/공유/다시하기 버튼 자체는
-   결과 이미지에 들어가면 안 되므로 .no-capture 클래스로 표시해두고
-   ignoreElements로 제외한다.
+   .result-card 전체를 그대로 캡처하면 추천 헤어 카드가 여러 개
+   쌓여서 이미지가 세로로 매우 길어진다. 그래서 저장/공유 전용으로
+   사진·얼굴형·피부톤·추천 컬러·대표 추천 헤어 1개만 담은 고정
+   너비의 #shareCard 템플릿을 결과로 채운 뒤, 그 카드만 html2canvas로
+   캡처한다.
    ----------------------------------------------------------- */
+
+async function buildShareCard(){
+
+  const card =
+  document.getElementById("shareCard");
+
+  const photo =
+  document.getElementById("shareCardPhoto");
+
+  photo.style.display = "block";
+  photo.src = currentImage || "";
+
+  // html2canvas가 캡처를 시작하기 전에 사진 로딩이 끝나있어야
+  // 빈 칸으로 캡처되지 않는다 (capturePhoto의 preview.onload 대기와
+  // 같은 이유).
+  if(currentImage && !(photo.complete && photo.naturalWidth > 0)){
+    await new Promise(resolve=>{
+      photo.onload = resolve;
+      photo.onerror = resolve;
+    });
+  }
+
+  document
+  .getElementById("shareCardShape")
+  .innerText =
+  document.getElementById("faceShapeResult").innerText || "-";
+
+  document
+  .getElementById("shareCardConfidence")
+  .innerText =
+  document.getElementById("faceShapeConfidence").innerText || "-";
+
+  document
+  .getElementById("shareCardSkin")
+  .innerText =
+  document.getElementById("skinToneResult").innerText || "-";
+
+  document
+  .getElementById("shareCardGender")
+  .innerText =
+  document.getElementById("genderResult").innerText || "-";
+
+  const colorsBox =
+  document.getElementById("shareCardColors");
+
+  colorsBox.innerHTML = "";
+
+  document
+  .querySelectorAll("#bestColorRow .color-tag")
+  .forEach(tag=>{
+    colorsBox.innerHTML +=
+    `<span class="color-tag">${tag.innerText}</span>`;
+  });
+
+  const hairBox =
+  document.getElementById("shareCardHair");
+
+  if(lastRecommend.length > 0){
+
+    const top = lastRecommend[0];
+
+    hairBox.innerHTML = `
+      <img src="${top.image}" onerror="this.onerror=null;this.style.display='none';">
+      <div>
+        <h4>${top.name}</h4>
+        <p>${top.reason}</p>
+      </div>
+    `;
+
+    hairBox.style.display = "flex";
+
+  }
+  else{
+    hairBox.style.display = "none";
+  }
+
+  return card;
+}
 
 async function captureResultCanvas(){
 
@@ -2073,17 +2152,14 @@ async function captureResultCanvas(){
     return null;
   }
 
-  const target =
-  document.querySelector(".result-card");
+  const target = await buildShareCard();
 
   try{
 
     return await html2canvas(target, {
       backgroundColor:"#ffffff",
       scale:2,
-      useCORS:true,
-      ignoreElements:(el)=>
-        el.classList && el.classList.contains("no-capture")
+      useCORS:true
     });
 
   }

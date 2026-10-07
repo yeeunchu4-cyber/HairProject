@@ -364,6 +364,36 @@
 
 </div>
 
+<!-- 이미지 저장 / 공유용 요약 카드 (화면에는 안 보이고 캡처용으로만 사용) -->
+<div id="shareCard" class="share-card">
+
+  <div class="share-card-photo">
+    <img id="shareCardPhoto" src="" alt="분석 사진" onerror="this.onerror=null;this.style.display='none';">
+  </div>
+
+  <span class="share-card-kicker">Hair Style Finder 분석 결과</span>
+  <h2 id="shareCardShape" class="share-card-shape">-</h2>
+  <span id="shareCardConfidence" class="confidence-badge">-</span>
+
+  <div class="share-card-summary">
+    <div>
+      <span>피부톤</span>
+      <p id="shareCardSkin">-</p>
+    </div>
+    <div>
+      <span>성별</span>
+      <p id="shareCardGender">-</p>
+    </div>
+  </div>
+
+  <div class="share-card-colors" id="shareCardColors"></div>
+
+  <div class="share-card-hair" id="shareCardHair"></div>
+
+  <div class="share-card-footer">Hair Style Finder · 얼굴형 · 피부톤 기반 맞춤 추천</div>
+
+</div>
+
 <script src="script.js"></script>
 
 </body>
