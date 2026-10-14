@@ -1067,7 +1067,38 @@ video,#preview{
   #hairCards,
   #worstHairCards,
   #celebCards{
-    grid-template-columns:1fr;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+
+  .hair-card img,
+  .celeb-card img{
+    height:140px;
+  }
+
+  .hair-info{
+    padding:12px;
+  }
+
+  .hair-info h4{
+    font-size:17px;
+    margin-bottom:8px;
+  }
+
+  .hair-info p{
+    font-size:13px;
+    margin-bottom:8px;
+  }
+
+  .tag{
+    font-size:11px;
+    padding:5px 8px;
+  }
+
+  .principle-box,
+  .hair-info .note-box{
+    font-size:12px;
+    padding:8px 10px;
   }
 
   .main-header{

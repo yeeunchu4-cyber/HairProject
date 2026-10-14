@@ -2173,12 +2173,16 @@ async function runRecommendation(){
       ? `<p class="note-box">${hair.note}</p>`
       : "";
 
+    // "Algorithm 1 추천" 배지는 정상적으로 추천된 항목 대부분에 뜨다
+    // 보니 정보량이 없어서 뺐다. 매칭률(fallback)과 그루밍 관례
+    // 안내(convention)는 결과가 왜 다르게 나오는지 설명해주는
+    // 정보라 유지한다.
     const matchBadgeHTML =
     matchMode === "fallback"
       ? `<span class="tag confidence-low">${hair.matchPercent}% 일치</span>`
       : matchMode === "convention"
       ? `<span class="tag confidence-low">그루밍 관례 기준</span>`
-      : `<span class="tag confidence-high">Algorithm 1 추천</span>`;
+      : "";
 
     // hair.reason은 "Oval Face는..." 식으로 특정 얼굴형을 못박아 쓴
     // 문장이다. convention 모드(남성)는 항상 그 얼굴형으로만 보여주니
