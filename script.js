@@ -1755,6 +1755,101 @@ function isItSuitable(faceShape, hairStyle){
   return "Inconclusive";
 }
 
+/* isItSuitable()이 "Recommend"를 준 이유를 스타일마다 다르게 설명한다.
+   faceShapePrinciples는 얼굴형 하나당 문장 하나뿐이라 같은 얼굴형이면
+   모든 카드에 똑같은 글이 뜨는 문제가 있었다 — 이 함수는 그 대신
+   "이 스타일의 어떤 속성이 Algorithm 1의 어떤 조건을 충족시켰는지"를
+   실제로 찾아서, 스타일마다 다른 한 문장을 만들어준다. 조건이 여러 개
+   겹쳐도 우선순위상 가장 먼저 걸리는 것 하나만 설명한다(문장이 너무
+   길어지지 않도록). Recommend가 아닌 항목(fallback 모드)에는 쓰지
+   않는다 — 설명할 "근거"가 애초에 없기 때문이다. */
+function explainReason(faceShape, hairStyle){
+
+  const length =
+  hairStyle.type === "medium" ? "midLength" : hairStyle.type;
+
+  const { style, bang, layered } = hairStyle;
+
+  const bangPhrase =
+  bang === "blunt" ? "일자로 자른 앞머리가"
+  : bang === "sideSwept" ? "옆으로 넘긴 앞머리가"
+  : "";
+
+  if(faceShape === "Round Face"){
+
+    if(length === "midLength"){
+      return "어깨 정도 오는 중간 길이라 세로 라인을 만들어줘서 둥근 느낌을 줄여줘요.";
+    }
+    if(length === "long" && style === "mix"){
+      return "긴 기장에 스트레이트와 웨이브가 섞인 스타일이라 시선이 분산되면서 둥근 느낌을 줄여줘요.";
+    }
+    if(layered === "slide"){
+      return "층을 낸 레이어드 구조가 세로 라인을 강조해줘서 둥근 느낌을 줄여줘요.";
+    }
+    if(bang === "sideSwept"){
+      return "옆으로 넘긴 앞머리가 비스듬한 선을 만들어줘서 둥근 느낌을 줄여줘요.";
+    }
+
+  }
+  else if(faceShape === "Oval Face"){
+
+    if(length === "midLength"){
+      return "중간 길이라 전체적인 비율의 균형을 그대로 살려줘요.";
+    }
+    if(bang === "sideSwept"){
+      return "옆으로 넘긴 앞머리가 자연스러운 분위기를 더해 균형 잡힌 얼굴형의 장점을 살려줘요.";
+    }
+    if(style === "mix"){
+      return "스트레이트와 웨이브가 섞인 스타일이라 다양한 매력을 보여줄 수 있어요.";
+    }
+
+  }
+  else if(faceShape === "Long Face"){
+
+    if(bang === "blunt" || bang === "sideSwept"){
+      return `${bangPhrase} 이마 라인을 가려줘서 세로로 길어 보이는 느낌을 줄여줘요.`;
+    }
+    if(style === "wavy"){
+      return "웨이브 스타일이 가로 방향으로 볼륨을 더해줘서 세로로 길어 보이는 느낌을 줄여줘요.";
+    }
+    if(length === "short" && layered === "non"){
+      return "짧고 층 없는 길이라 세로 길이를 과하게 늘리지 않아요.";
+    }
+
+  }
+  else if(faceShape === "Square Face"){
+
+    if(style === "wavy"){
+      return "웨이브가 각진 턱선을 부드럽게 감싸줘서 각진 느낌을 완화해줘요.";
+    }
+    if(bang === "sideSwept"){
+      return "옆으로 넘긴 앞머리가 턱선에서 시선을 분산시켜 각진 느낌을 완화해줘요.";
+    }
+    if(layered === "slide"){
+      return "층을 낸 구조가 턱선 주변을 부드럽게 흘러내려 각진 느낌을 완화해줘요.";
+    }
+    if(length === "midLength" && layered === "non"){
+      return "중간 길이의 단정한 일자 라인이 안정적인 균형을 잡아줘요.";
+    }
+
+  }
+  else if(faceShape === "Heart Face"){
+
+    if(style === "wavy"){
+      return "웨이브가 좁은 턱 주변에 자연스러운 볼륨을 더해 이마와 턱의 균형을 맞춰줘요.";
+    }
+    if(bang === "sideSwept"){
+      return "옆으로 넘긴 앞머리가 넓은 이마를 자연스럽게 가려 균형을 맞춰줘요.";
+    }
+    if(style === "mix"){
+      return "스트레이트와 웨이브가 섞인 스타일이 이마와 턱의 균형을 잡아줘요.";
+    }
+
+  }
+
+  return null;
+}
+
 /* 사용자가 고른 길이/스타일과 hairDB 항목의 길이/스타일이 얼마나
    겹치는지 0~100 점수로 환산한다. Algorithm 1에는 없는, 이 프로젝트
    자체 보완 로직 — Recommend가 하나도 안 나올 때 "그나마 가까운"
@@ -2155,18 +2250,32 @@ async function runRecommendation(){
     .map(tag=>`<span class="tag">${tag}</span>`)
     .join("");
 
-    // 근거 원칙(principleInfo)은 Algorithm 1에서 나온 설명이라,
-    // Algorithm 1을 적용하지 않는 남성(convention 모드)에는 보여주지 않는다.
-    const principleInfo =
-    matchMode === "convention" ? null : faceShapePrinciples[shape];
+    // 근거 원칙은 "이 스타일의 어떤 속성이 Algorithm 1의 어떤 조건을
+    // 충족했는지"를 스타일마다 다르게 설명한다(explainReason). 이전엔
+    // faceShapePrinciples[shape] 하나를 얼굴형별로 고정해서 써서 같은
+    // 얼굴형이면 모든 카드에 똑같은 문장이 떴었다 — 그 문제를 고친
+    // 것. fallback/convention 모드는 Algorithm 1의 Recommend 판정
+    // 자체가 없으니 이 박스를 보여주지 않는다.
+    const explanation =
+    matchMode === "recommend" ? explainReason(shape, hair) : null;
 
     const principleHTML =
-    principleInfo
+    explanation
       ? `<p class="principle-box">
           <strong>근거 원칙</strong><br>
-          ${principleInfo.principle}
+          ${explanation}
         </p>`
       : "";
+
+    // "스타일 포인트"는 근거 원칙과 내용이 겹치는 데다 카드를 길게
+    // 만들어서, 근거 원칙이 따로 뜨는 recommend 모드에서는 뺀다.
+    const pointHTML =
+    matchMode === "recommend"
+      ? ""
+      : `<p>
+          <strong>스타일 포인트</strong><br>
+          ${hair.point}
+        </p>`;
 
     const noteHTML =
     hair.note
@@ -2213,10 +2322,7 @@ async function runRecommendation(){
 
         ${reasonHTML}
 
-        <p>
-        <strong>스타일 포인트</strong><br>
-        ${hair.point}
-        </p>
+        ${pointHTML}
 
         ${principleHTML}
 
