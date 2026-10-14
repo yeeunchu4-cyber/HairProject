@@ -2260,21 +2260,10 @@ async function runRecommendation(){
 
   if(worstList && worstList.length > 0){
 
-    const principleInfo =
-    faceShapePrinciples[shape];
-
     const confidenceTag =
     worstEntry.confidence === "low"
       ? `<span class="tag confidence-low">근거 약함</span>`
       : `<span class="tag confidence-high">근거 확인됨</span>`;
-
-    const principleHTML =
-    principleInfo
-      ? `<p class="principle-box">
-          <strong>근거 원칙</strong><br>
-          ${principleInfo.principle}
-        </p>`
-      : "";
 
     const lowConfidenceNoteHTML =
     worstEntry.confidence === "low"
@@ -2294,8 +2283,6 @@ async function runRecommendation(){
           <strong>비추천 이유</strong><br>
           ${item.reason}
           </p>
-
-          ${principleHTML}
 
           ${lowConfidenceNoteHTML}
 
