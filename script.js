@@ -523,9 +523,34 @@ function detectSkinTone(){
 
 /* ===== 성별 ===== */
 
+/* 스타일 선택 드롭다운 — 여성은 Algorithm 1이 실제로 쓰는 속성
+   (생머리/웨이브/믹스)을 그대로 보여주고, 남성은 Algorithm 1을
+   적용하지 않으므로(hairDetailByConvention) 원래 쓰던 남성
+   그루밍 어휘(깔끔/캐주얼/부드러운)를 보여준다. hairDB의 남성
+   항목 style 필드도 이 어휘로 맞춰져 있다. */
+const STYLE_OPTIONS_FEMALE = `
+  <option value="">스타일 선택</option>
+  <option value="straight">생머리</option>
+  <option value="wavy">웨이브</option>
+  <option value="mix">믹스 (일부 웨이브)</option>
+`;
+
+const STYLE_OPTIONS_MALE = `
+  <option value="">스타일 선택</option>
+  <option value="clean">깔끔</option>
+  <option value="casual">캐주얼</option>
+  <option value="soft">부드러운</option>
+`;
+
 function setGender(g){
 
   gender = g;
+
+  const styleSelect =
+  document.getElementById("styleSelect");
+
+  styleSelect.innerHTML =
+  g === "male" ? STYLE_OPTIONS_MALE : STYLE_OPTIONS_FEMALE;
 
   document
   .getElementById("maleBtn")
@@ -1294,7 +1319,7 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Oval Face",
   type:"medium",
-  style:"wavy",
+  style:"soft",
   bang:"sideSwept",
   layered:"slide",
   reason:"Oval Face는 얼굴 비율이 균형 잡혀 있어 자연스러운 앞머리 흐름의 애즈펌이 잘 어울립니다.",
@@ -1307,7 +1332,7 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Oval Face",
   type:"medium",
-  style:"mix",
+  style:"casual",
   bang:"sideSwept",
   layered:"slide",
   reason:"Oval Face는 다양한 스타일을 소화하기 쉬워 얼굴 옆선을 자연스럽게 감싸는 리프컷도 잘 어울립니다.",
@@ -1320,7 +1345,7 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Oval Face",
   type:"medium",
-  style:"straight",
+  style:"soft",
   bang:"sideSwept",
   layered:"non",
   reason:"Oval Face는 이마와 턱선의 비율이 안정적이어서 가벼운 앞머리 스타일이 자연스럽게 어울립니다.",
@@ -1333,7 +1358,7 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Round Face",
   type:"medium",
-  style:"wavy",
+  style:"casual",
   bang:"sideSwept",
   layered:"slide",
   reason:"Round Face는 볼륨감 있는 쉐도우펌이 얼굴의 밋밋한 느낌을 줄이고 입체감을 만들어줍니다.",
@@ -1346,7 +1371,7 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Round Face",
   type:"short",
-  style:"straight",
+  style:"clean",
   bang:"sideSwept",
   layered:"non",
   reason:"Round Face는 옆머리를 정리한 투블럭컷으로 얼굴 옆 라인을 깔끔하게 잡아줄 수 있습니다.",
@@ -1359,7 +1384,7 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Heart Face",
   type:"short",
-  style:"straight",
+  style:"clean",
   bang:"sideSwept",
   layered:"non",
   reason:"Heart Face는 이마가 넓어 보일 수 있어 가일컷처럼 앞머리 방향을 잡아주는 스타일이 잘 어울립니다.",
@@ -1372,7 +1397,7 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Long Face",
   type:"short",
-  style:"straight",
+  style:"clean",
   bang:"blunt",
   layered:"non",
   reason:"Long Face는 얼굴이 길어 보일 수 있어 앞머리와 옆라인을 안정적으로 잡아주는 드롭컷이 잘 어울립니다.",
@@ -1385,7 +1410,7 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Long Face",
   type:"short",
-  style:"mix",
+  style:"casual",
   bang:"sideSwept",
   layered:"slide",
   reason:"Long Face는 자연스러운 질감과 움직임이 있는 텍스처컷으로 시선을 분산시킬 수 있습니다.",
@@ -1398,7 +1423,7 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Square Face",
   type:"short",
-  style:"straight",
+  style:"clean",
   bang:"blunt",
   layered:"non",
   reason:"Square Face는 각진 턱선이 강해 보일 수 있어 깔끔한 크롭컷으로 전체 인상을 정리할 수 있습니다.",
@@ -1412,7 +1437,7 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Square Face",
   type:"short",
-  style:"straight",
+  style:"clean",
   bang:"sideSwept",
   layered:"non",
   reason:"Square Face는 옆머리를 정리하는 페이드컷으로 얼굴 윤곽을 깔끔하게 정돈할 수 있습니다.",
@@ -1426,7 +1451,7 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Square Face",
   type:"short",
-  style:"straight",
+  style:"clean",
   bang:"none",
   layered:"non",
   reason:"Square Face는 또렷한 턱선과 포마드컷의 정돈된 라인이 잘 어울립니다.",
@@ -1753,101 +1778,6 @@ function isItSuitable(faceShape, hairStyle){
   }
 
   return "Inconclusive";
-}
-
-/* isItSuitable()이 "Recommend"를 준 이유를 스타일마다 다르게 설명한다.
-   faceShapePrinciples는 얼굴형 하나당 문장 하나뿐이라 같은 얼굴형이면
-   모든 카드에 똑같은 글이 뜨는 문제가 있었다 — 이 함수는 그 대신
-   "이 스타일의 어떤 속성이 Algorithm 1의 어떤 조건을 충족시켰는지"를
-   실제로 찾아서, 스타일마다 다른 한 문장을 만들어준다. 조건이 여러 개
-   겹쳐도 우선순위상 가장 먼저 걸리는 것 하나만 설명한다(문장이 너무
-   길어지지 않도록). Recommend가 아닌 항목(fallback 모드)에는 쓰지
-   않는다 — 설명할 "근거"가 애초에 없기 때문이다. */
-function explainReason(faceShape, hairStyle){
-
-  const length =
-  hairStyle.type === "medium" ? "midLength" : hairStyle.type;
-
-  const { style, bang, layered } = hairStyle;
-
-  const bangPhrase =
-  bang === "blunt" ? "일자로 자른 앞머리가"
-  : bang === "sideSwept" ? "옆으로 넘긴 앞머리가"
-  : "";
-
-  if(faceShape === "Round Face"){
-
-    if(length === "midLength"){
-      return "어깨 정도 오는 중간 길이라 세로 라인을 만들어줘서 둥근 느낌을 줄여줘요.";
-    }
-    if(length === "long" && style === "mix"){
-      return "긴 기장에 스트레이트와 웨이브가 섞인 스타일이라 시선이 분산되면서 둥근 느낌을 줄여줘요.";
-    }
-    if(layered === "slide"){
-      return "층을 낸 레이어드 구조가 세로 라인을 강조해줘서 둥근 느낌을 줄여줘요.";
-    }
-    if(bang === "sideSwept"){
-      return "옆으로 넘긴 앞머리가 비스듬한 선을 만들어줘서 둥근 느낌을 줄여줘요.";
-    }
-
-  }
-  else if(faceShape === "Oval Face"){
-
-    if(length === "midLength"){
-      return "중간 길이라 전체적인 비율의 균형을 그대로 살려줘요.";
-    }
-    if(bang === "sideSwept"){
-      return "옆으로 넘긴 앞머리가 자연스러운 분위기를 더해 균형 잡힌 얼굴형의 장점을 살려줘요.";
-    }
-    if(style === "mix"){
-      return "스트레이트와 웨이브가 섞인 스타일이라 다양한 매력을 보여줄 수 있어요.";
-    }
-
-  }
-  else if(faceShape === "Long Face"){
-
-    if(bang === "blunt" || bang === "sideSwept"){
-      return `${bangPhrase} 이마 라인을 가려줘서 세로로 길어 보이는 느낌을 줄여줘요.`;
-    }
-    if(style === "wavy"){
-      return "웨이브 스타일이 가로 방향으로 볼륨을 더해줘서 세로로 길어 보이는 느낌을 줄여줘요.";
-    }
-    if(length === "short" && layered === "non"){
-      return "짧고 층 없는 길이라 세로 길이를 과하게 늘리지 않아요.";
-    }
-
-  }
-  else if(faceShape === "Square Face"){
-
-    if(style === "wavy"){
-      return "웨이브가 각진 턱선을 부드럽게 감싸줘서 각진 느낌을 완화해줘요.";
-    }
-    if(bang === "sideSwept"){
-      return "옆으로 넘긴 앞머리가 턱선에서 시선을 분산시켜 각진 느낌을 완화해줘요.";
-    }
-    if(layered === "slide"){
-      return "층을 낸 구조가 턱선 주변을 부드럽게 흘러내려 각진 느낌을 완화해줘요.";
-    }
-    if(length === "midLength" && layered === "non"){
-      return "중간 길이의 단정한 일자 라인이 안정적인 균형을 잡아줘요.";
-    }
-
-  }
-  else if(faceShape === "Heart Face"){
-
-    if(style === "wavy"){
-      return "웨이브가 좁은 턱 주변에 자연스러운 볼륨을 더해 이마와 턱의 균형을 맞춰줘요.";
-    }
-    if(bang === "sideSwept"){
-      return "옆으로 넘긴 앞머리가 넓은 이마를 자연스럽게 가려 균형을 맞춰줘요.";
-    }
-    if(style === "mix"){
-      return "스트레이트와 웨이브가 섞인 스타일이 이마와 턱의 균형을 잡아줘요.";
-    }
-
-  }
-
-  return null;
 }
 
 /* 사용자가 고른 길이/스타일과 hairDB 항목의 길이/스타일이 얼마나
@@ -2250,32 +2180,12 @@ async function runRecommendation(){
     .map(tag=>`<span class="tag">${tag}</span>`)
     .join("");
 
-    // 근거 원칙은 "이 스타일의 어떤 속성이 Algorithm 1의 어떤 조건을
-    // 충족했는지"를 스타일마다 다르게 설명한다(explainReason). 이전엔
-    // faceShapePrinciples[shape] 하나를 얼굴형별로 고정해서 써서 같은
-    // 얼굴형이면 모든 카드에 똑같은 문장이 떴었다 — 그 문제를 고친
-    // 것. fallback/convention 모드는 Algorithm 1의 Recommend 판정
-    // 자체가 없으니 이 박스를 보여주지 않는다.
-    const explanation =
-    matchMode === "recommend" ? explainReason(shape, hair) : null;
-
-    const principleHTML =
-    explanation
-      ? `<p class="principle-box">
-          <strong>근거 원칙</strong><br>
-          ${explanation}
-        </p>`
-      : "";
-
-    // "스타일 포인트"는 근거 원칙과 내용이 겹치는 데다 카드를 길게
-    // 만들어서, 근거 원칙이 따로 뜨는 recommend 모드에서는 뺀다.
+    // 근거 원칙 박스는 카드를 길게 만들고 요청에 따라 아예 뺀다.
     const pointHTML =
-    matchMode === "recommend"
-      ? ""
-      : `<p>
-          <strong>스타일 포인트</strong><br>
-          ${hair.point}
-        </p>`;
+    `<p>
+      <strong>스타일 포인트</strong><br>
+      ${hair.point}
+    </p>`;
 
     const noteHTML =
     hair.note
@@ -2323,8 +2233,6 @@ async function runRecommendation(){
         ${reasonHTML}
 
         ${pointHTML}
-
-        ${principleHTML}
 
         ${noteHTML}
 

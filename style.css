@@ -440,9 +440,12 @@ video,#preview{
   width:100%;
   max-width:430px;
   margin-bottom:14px;
-  font-size:13px;
-  color:#9ca3af;
+  font-size:15px;
+  color:#6b7280;
   line-height:1.5;
+}
+.camera-tip strong{
+  color:var(--accent);
 }
 .analyze-btn{
   width:230px;
