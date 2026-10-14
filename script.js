@@ -1175,6 +1175,14 @@ const faceShapePrinciples = {
 
 };
 
+/* -----------------------------------------------------
+   style/bang/layered는 논문(Pasupa, Sunhem & Loo, 2019) Algorithm 1이
+   쓰는 어휘 그대로다: style={straight,wavy,mix}, bang={none,blunt,
+   sideSwept}, layered={non,slide}. primaryFaceShape는 과거 수동
+   배정의 흔적으로 남겨뒀지만 더 이상 필터링에 쓰이지 않는다 —
+   실제 추천 여부는 isItSuitable()이 이 네 속성으로 매 요청마다
+   계산한다(아래 참고).
+   ----------------------------------------------------- */
 const hairDB = [
 {
   name:"레이어드컷",
@@ -1182,7 +1190,9 @@ const hairDB = [
   gender:"female",
   primaryFaceShape:"Oval Face",
   type:"long",
-  style:"soft",
+  style:"straight",
+  bang:"sideSwept",
+  layered:"slide",
   reason:"Oval Face는 전체적인 얼굴 비율이 균형 잡혀 있어 레이어드컷이 얼굴선을 자연스럽게 살려줍니다.",
   point:"얼굴 옆 라인을 부드럽게 감싸 자연스럽고 여성스러운 분위기를 연출할 수 있습니다.",
   tags:["Oval 추천","얼굴선 보완","자연스러움"]
@@ -1193,7 +1203,9 @@ const hairDB = [
   gender:"female",
   primaryFaceShape:"Oval Face",
   type:"medium",
-  style:"soft",
+  style:"wavy",
+  bang:"none",
+  layered:"non",
   reason:"Oval Face는 턱선과 얼굴 비율이 안정적이기 때문에 C컬펌처럼 단정한 스타일이 잘 어울립니다.",
   point:"끝부분의 C컬이 턱선을 자연스럽게 감싸 깔끔하고 부드러운 인상을 줍니다.",
   tags:["Oval 추천","단정함","중간 기장"]
@@ -1204,7 +1216,9 @@ const hairDB = [
   gender:"female",
   primaryFaceShape:"Oval Face",
   type:"long",
-  style:"casual",
+  style:"wavy",
+  bang:"none",
+  layered:"slide",
   reason:"Oval Face는 다양한 스타일을 소화하기 쉬워 자연스러운 웨이브펌도 잘 어울립니다.",
   point:"웨이브가 얼굴 주변에 입체감을 만들어 부드럽고 자연스러운 분위기를 줍니다.",
   tags:["Oval 추천","입체감","캐주얼"]
@@ -1215,7 +1229,9 @@ const hairDB = [
   gender:"female",
   primaryFaceShape:"Round Face",
   type:"long",
-  style:"soft",
+  style:"wavy",
+  bang:"none",
+  layered:"slide",
   reason:"Round Face는 얼굴 양옆에 세로 흐름을 만들어주는 S컬펌이 둥근 인상을 완화해줍니다.",
   point:"S컬의 흐름이 얼굴 옆선을 길어 보이게 하여 부드럽고 갸름한 느낌을 줄 수 있습니다.",
   tags:["Round 추천","세로 라인","볼륨감"]
@@ -1226,7 +1242,9 @@ const hairDB = [
   gender:"female",
   primaryFaceShape:"Round Face",
   type:"long",
-  style:"casual",
+  style:"wavy",
+  bang:"sideSwept",
+  layered:"slide",
   reason:"Round Face는 위아래 볼륨과 움직임이 있는 스타일이 얼굴의 둥근 느낌을 분산시켜줍니다.",
   point:"풍성한 컬이 개성 있는 분위기를 만들고 얼굴형의 단조로움을 줄여줍니다.",
   tags:["Round 추천","개성","볼륨"]
@@ -1237,9 +1255,11 @@ const hairDB = [
   gender:"female",
   primaryFaceShape:"Heart Face",
   type:"long",
-  style:"soft",
+  style:"wavy",
+  bang:"none",
+  layered:"non",
   reason:"Heart Face는 이마가 넓고 턱선이 좁아 보일 수 있어 아래쪽 볼륨이 있는 글램펌이 균형을 맞춰줍니다.",
-  point:"턱 주변에 볼륨감을 더해 얼굴 아래쪽이 너무 좁아 보이지 않도록 보완합니다.",
+  point:"턱 주변에 자연스러운 볼륨감을 더해줘서 부드럽고 여성스러운 실루엣을 만들어줍니다.",
   tags:["Heart 추천","아래 볼륨","여성스러움"]
 },
 {
@@ -1248,9 +1268,11 @@ const hairDB = [
   gender:"female",
   primaryFaceShape:"Square Face",
   type:"long",
-  style:"clean",
+  style:"straight",
+  bang:"blunt",
+  layered:"non",
   reason:"Square Face는 각진 턱선을 부드럽게 가려주는 옆 라인 스타일이 잘 어울립니다.",
-  point:"옆머리 라인이 턱선을 감싸 각진 느낌을 완화해줍니다.",
+  point:"또렷한 일자 라인과 가지런한 앞머리가 깔끔하고 단정한 인상을 만들어줍니다.",
   tags:["Square 추천","턱선 보완","깔끔"]
 },
 {
@@ -1259,9 +1281,11 @@ const hairDB = [
   gender:"female",
   primaryFaceShape:"Long Face",
   type:"medium",
-  style:"soft",
+  style:"wavy",
+  bang:"none",
+  layered:"non",
   reason:"Long Face는 너무 긴 생머리보다 중간 기장의 C컬펌이 얼굴 길이를 시각적으로 완화해줍니다.",
-  point:"턱 주변에 볼륨을 만들어 얼굴이 지나치게 길어 보이는 느낌을 줄입니다.",
+  point:"턱 주변에 자연스러운 볼륨을 만들어 부드러운 인상을 더해줍니다.",
   tags:["Long 추천","중간 기장","길이 보완"]
 },
 {
@@ -1270,7 +1294,9 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Oval Face",
   type:"medium",
-  style:"soft",
+  style:"wavy",
+  bang:"sideSwept",
+  layered:"slide",
   reason:"Oval Face는 얼굴 비율이 균형 잡혀 있어 자연스러운 앞머리 흐름의 애즈펌이 잘 어울립니다.",
   point:"부드럽고 깔끔한 인상을 줄 수 있어 부담 없이 적용하기 좋은 남성 스타일입니다.",
   tags:["Oval 추천","부드러움","남성 스타일"]
@@ -1281,7 +1307,9 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Oval Face",
   type:"medium",
-  style:"casual",
+  style:"mix",
+  bang:"sideSwept",
+  layered:"slide",
   reason:"Oval Face는 다양한 스타일을 소화하기 쉬워 얼굴 옆선을 자연스럽게 감싸는 리프컷도 잘 어울립니다.",
   point:"트렌디하면서도 얼굴선을 부드럽게 보완할 수 있습니다.",
   tags:["Oval 추천","트렌디","얼굴선 보완"]
@@ -1292,7 +1320,9 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Oval Face",
   type:"medium",
-  style:"soft",
+  style:"straight",
+  bang:"sideSwept",
+  layered:"non",
   reason:"Oval Face는 이마와 턱선의 비율이 안정적이어서 가벼운 앞머리 스타일이 자연스럽게 어울립니다.",
   point:"답답하지 않은 앞머리로 부드럽고 깔끔한 이미지를 만들 수 있습니다.",
   tags:["Oval 추천","앞머리","부드러움"]
@@ -1303,7 +1333,9 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Round Face",
   type:"medium",
-  style:"casual",
+  style:"wavy",
+  bang:"sideSwept",
+  layered:"slide",
   reason:"Round Face는 볼륨감 있는 쉐도우펌이 얼굴의 밋밋한 느낌을 줄이고 입체감을 만들어줍니다.",
   point:"윗부분 볼륨으로 얼굴이 조금 더 길어 보이는 효과를 줄 수 있습니다.",
   tags:["Round 추천","볼륨","입체감"]
@@ -1314,7 +1346,9 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Round Face",
   type:"short",
-  style:"clean",
+  style:"straight",
+  bang:"sideSwept",
+  layered:"non",
   reason:"Round Face는 옆머리를 정리한 투블럭컷으로 얼굴 옆 라인을 깔끔하게 잡아줄 수 있습니다.",
   point:"둥근 인상을 줄이고 단정한 이미지를 만들 수 있습니다.",
   tags:["Round 추천","깔끔","옆라인 정리"]
@@ -1325,7 +1359,9 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Heart Face",
   type:"short",
-  style:"clean",
+  style:"straight",
+  bang:"sideSwept",
+  layered:"non",
   reason:"Heart Face는 이마가 넓어 보일 수 있어 가일컷처럼 앞머리 방향을 잡아주는 스타일이 잘 어울립니다.",
   point:"이마 라인을 자연스럽게 보완하면서 세련된 인상을 줍니다.",
   tags:["Heart 추천","세련됨","이마 보완"]
@@ -1336,7 +1372,9 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Long Face",
   type:"short",
-  style:"clean",
+  style:"straight",
+  bang:"blunt",
+  layered:"non",
   reason:"Long Face는 얼굴이 길어 보일 수 있어 앞머리와 옆라인을 안정적으로 잡아주는 드롭컷이 잘 어울립니다.",
   point:"윗머리 높이를 과하게 만들지 않아 얼굴 길이를 시각적으로 완화합니다.",
   tags:["Long 추천","짧은 머리","길이 보완"]
@@ -1347,7 +1385,9 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Long Face",
   type:"short",
-  style:"casual",
+  style:"mix",
+  bang:"sideSwept",
+  layered:"slide",
   reason:"Long Face는 자연스러운 질감과 움직임이 있는 텍스처컷으로 시선을 분산시킬 수 있습니다.",
   point:"머리의 질감과 볼륨을 적절히 살려 얼굴 길이를 보완합니다.",
   tags:["Long 추천","질감","캐주얼"]
@@ -1358,7 +1398,9 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Square Face",
   type:"short",
-  style:"clean",
+  style:"straight",
+  bang:"blunt",
+  layered:"non",
   reason:"Square Face는 각진 턱선이 강해 보일 수 있어 깔끔한 크롭컷으로 전체 인상을 정리할 수 있습니다.",
   point:"강한 턱선을 남성적으로 살리면서 단정한 이미지를 줍니다.",
   note:"참고: 여성 스타일링 원칙은 각진 턱선을 '완화'하는 방향이지만, 남성 그루밍에서는 뚜렷한 턱선을 매력 포인트로 '강조'하는 것이 일반적인 관례입니다. 이 항목은 그 관례를 따른 것으로, 원 문헌의 여성 기준 원칙과는 방향이 반대입니다.",
@@ -1370,7 +1412,9 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Square Face",
   type:"short",
-  style:"clean",
+  style:"straight",
+  bang:"sideSwept",
+  layered:"non",
   reason:"Square Face는 옆머리를 정리하는 페이드컷으로 얼굴 윤곽을 깔끔하게 정돈할 수 있습니다.",
   point:"각진 얼굴형의 장점을 살리면서 세련된 분위기를 만듭니다.",
   note:"참고: 여성 스타일링 원칙은 각진 턱선을 '완화'하는 방향이지만, 남성 그루밍에서는 뚜렷한 턱선을 매력 포인트로 '강조'하는 것이 일반적인 관례입니다. 이 항목은 그 관례를 따른 것으로, 원 문헌의 여성 기준 원칙과는 방향이 반대입니다.",
@@ -1382,7 +1426,9 @@ const hairDB = [
   gender:"male",
   primaryFaceShape:"Square Face",
   type:"short",
-  style:"clean",
+  style:"straight",
+  bang:"none",
+  layered:"non",
   reason:"Square Face는 또렷한 턱선과 포마드컷의 정돈된 라인이 잘 어울립니다.",
   point:"성숙하고 깔끔한 이미지를 연출할 수 있습니다.",
   note:"참고: 여성 스타일링 원칙은 각진 턱선을 '완화'하는 방향이지만, 남성 그루밍에서는 뚜렷한 턱선을 매력 포인트로 '강조'하는 것이 일반적인 관례입니다. 이 항목은 그 관례를 따른 것으로, 원 문헌의 여성 기준 원칙과는 방향이 반대입니다.",
@@ -1403,9 +1449,11 @@ const hairDB = [
   gender:"female",
   primaryFaceShape:"Heart Face",
   type:"long",
-  style:"casual",
+  style:"wavy",
+  bang:"none",
+  layered:"slide",
   reason:"Heart Face는 풍성한 웨이브나 컬이 있는 스타일이 이마와 턱의 균형을 맞춰줘요. 트위스터펌처럼 볼륨감 있는 롱 펌이 잘 어울립니다.",
-  point:"자연스러운 웨이브와 볼륨감이 좁은 턱선 주변을 부드럽게 채워줍니다.",
+  point:"자연스러운 웨이브와 볼륨감이 얼굴 주변을 부드럽게 채워주며 생기 있는 인상을 줍니다.",
   tags:["Heart 추천","볼륨","개성있는 컬"]
 },
 {
@@ -1414,7 +1462,9 @@ const hairDB = [
   gender:"female",
   primaryFaceShape:"Heart Face",
   type:"short",
-  style:"clean",
+  style:"straight",
+  bang:"sideSwept",
+  layered:"slide",
   reason:"Heart Face는 사이드로 넘긴 비대칭 앞머리가 넓은 이마를 자연스럽게 가려주면서 세련된 느낌을 줍니다.",
   point:"한쪽으로 쏠린 언발란스 라인이 이목구비에 포인트를 주고 개성 있는 분위기를 만듭니다.",
   tags:["Heart 추천","사이드뱅","비대칭"]
@@ -1425,7 +1475,9 @@ const hairDB = [
   gender:"female",
   primaryFaceShape:"Square Face",
   type:"long",
-  style:"soft",
+  style:"wavy",
+  bang:"sideSwept",
+  layered:"slide",
   reason:"Square Face는 부드러운 웨이브 펌이 각진 턱선을 자연스럽게 감싸줘요. 느슨한 웨이브와 사이드 뱅이 각진 느낌을 완화합니다.",
   point:"굵은 웨이브가 얼굴 옆선을 부드럽게 흘러내리며 부드러운 인상을 더해줍니다.",
   tags:["Square 추천","웨이브","부드러움"]
@@ -1436,9 +1488,11 @@ const hairDB = [
   gender:"female",
   primaryFaceShape:"Long Face",
   type:"medium",
-  style:"clean",
+  style:"straight",
+  bang:"none",
+  layered:"non",
   reason:"Long Face는 세로 길이를 과하게 늘리지 않는 미디엄 길이가 잘 어울려요. 어깨 위에서 깔끔하게 떨어지는 블런트컷이 시선을 분산시켜줍니다.",
-  point:"턱선보다 아래, 어깨 쪽에서 끝나는 라인이 얼굴이 길어 보이는 느낌을 줄여줍니다.",
+  point:"턱선보다 아래, 어깨 쪽에서 깔끔하게 떨어지는 라인이 단정하고 세련된 인상을 줍니다.",
   tags:["Long 추천","단정함","미디엄 기장"]
 }
 ];
@@ -1592,7 +1646,139 @@ function renderScores(scores){
 
 }
 
-/* ===== 추천 헤어 ===== */
+/* ===== 추천 헤어 =====
+
+   [Algorithm 1] Pasupa, Sunhem & Loo (2019), Expert Systems With
+   Applications, p.10 — IsItSuitable 절차를 그대로 옮겼다. 얼굴형과
+   헤어스타일의 4개 속성(length/style/bang/layered)을 받아 "Recommend"
+   /"Not-Recommend"/"Inconclusive" 중 하나를 돌려준다.
+   원문은 여성 헤어스타일링 가이드라인(Derrick, 2017; Hong, 2013) 기준
+   이라, 이 함수를 남성 항목에도 동일하게 적용하는 것은 원문의 적용
+   범위를 벗어난 확장이다(hairDB의 남성 Square Face 항목에 이미
+   달려있는 note 참고). ----------------------------------------- */
+
+function isItSuitable(faceShape, hairStyle){
+
+  const length =
+  hairStyle.type === "medium" ? "midLength" : hairStyle.type;
+
+  const { style, bang, layered } = hairStyle;
+
+  if(faceShape === "Round Face"){
+
+    if(
+      length === "midLength" ||
+      (length === "long" && style === "mix") ||
+      layered === "slide" ||
+      bang === "sideSwept"
+    ){
+      return "Recommend";
+    }
+
+    if(
+      bang === "blunt" ||
+      (layered === "slide" && length !== "midLength") ||
+      (length === "short" && style === "wavy")
+    ){
+      return "Not-Recommend";
+    }
+
+  }
+  else if(faceShape === "Oval Face"){
+
+    if(length === "midLength" || bang === "sideSwept" || style === "mix"){
+      return "Recommend";
+    }
+
+    if(length === "pixie" || (length === "short" && style === "wavy")){
+      return "Not-Recommend";
+    }
+
+  }
+  else if(faceShape === "Long Face"){ // 논문 원문 기준 oblong
+
+    if(
+      bang !== "none" ||
+      style === "wavy" ||
+      (length === "short" && layered === "non")
+    ){
+      return "Recommend";
+    }
+
+    if(
+      length === "pixie" ||
+      bang === "none" ||
+      (length === "long" && style === "straight")
+    ){
+      return "Not-Recommend";
+    }
+
+  }
+  else if(faceShape === "Square Face"){ // 논문 원문 기준 squared
+
+    if(
+      style === "wavy" ||
+      bang === "sideSwept" ||
+      layered === "slide" ||
+      (length === "midLength" && layered === "non")
+    ){
+      return "Recommend";
+    }
+
+    if(
+      bang === "blunt" ||
+      length === "short" ||
+      length === "pixie" ||
+      (length === "long" && style === "straight")
+    ){
+      return "Not-Recommend";
+    }
+
+  }
+  else if(faceShape === "Heart Face"){
+
+    if(
+      style === "wavy" ||
+      bang === "sideSwept" ||
+      (length === "long" && style === "mix") ||
+      (length === "short" && style === "mix")
+    ){
+      return "Recommend";
+    }
+
+    if(bang !== "sideSwept" || length === "pixie" || layered === "slide"){
+      return "Not-Recommend";
+    }
+
+  }
+
+  return "Inconclusive";
+}
+
+/* 사용자가 고른 길이/스타일과 hairDB 항목의 길이/스타일이 얼마나
+   겹치는지 0~100 점수로 환산한다. Algorithm 1에는 없는, 이 프로젝트
+   자체 보완 로직 — Recommend가 하나도 안 나올 때 "그나마 가까운"
+   스타일을 매칭률과 함께 보여주기 위한 것이다. */
+function matchPercent(hair, hairLength, style){
+
+  const checks = [];
+
+  if(hairLength !== ""){
+    checks.push(hair.type === hairLength);
+  }
+  if(style !== ""){
+    checks.push(hair.style === style);
+  }
+
+  if(checks.length === 0){
+    return 100;
+  }
+
+  const hits =
+  checks.filter(Boolean).length;
+
+  return Math.round((hits / checks.length) * 100);
+}
 
 function hairDetail(
   shape,
@@ -1601,27 +1787,79 @@ function hairDetail(
   style
 ){
 
-  let result =
-  hairDB.filter(hair=>
-
-    hair.gender === gender &&
-    hair.primaryFaceShape === shape
-
-  );
-
-  let filtered =
-  result.filter(hair=>
-
-    (hairLength === "" || hair.type === hairLength) &&
-    (style === "" || hair.style === style)
-
-  );
-
-  if(filtered.length > 0){
-    return filtered;
+  // 논문(Pasupa, Sunhem & Loo, 2019)은 여성 헤어스타일링 가이드라인만
+  // 다룬다. 남성에게 똑같은 Algorithm 1을 돌리면, 남성 그루밍에서는
+  // 반대로 적용되는 관례(예: 각진 턱선을 가리지 않고 오히려 강조)까지
+  // 여성 기준으로 틀린 판정을 내리게 된다 — hairDB의 남성 Square Face
+  // 항목에 달린 note가 그 구체적인 예시다. 그래서 남성은 Algorithm 1을
+  // 적용하지 않고, 각 항목에 수동으로 배정해둔 primaryFaceShape(일반적인
+  // 남성 그루밍 관례 기준)로만 매칭한다.
+  if(gender === "male"){
+    return hairDetailByConvention(shape, gender, hairLength, style);
   }
 
-  return result;
+  const candidates =
+  hairDB.filter(hair=> hair.gender === gender);
+
+  const withVerdict =
+  candidates.map(hair=> ({
+    ...hair,
+    verdict: isItSuitable(shape, hair)
+  }));
+
+  const recommended =
+  withVerdict.filter(hair=> hair.verdict === "Recommend");
+
+  const exact =
+  recommended.filter(hair=>
+    (hairLength === "" || hair.type === hairLength) &&
+    (style === "" || hair.style === style)
+  );
+
+  if(exact.length > 0){
+    return { list: exact, mode:"recommend" };
+  }
+
+  if(recommended.length > 0){
+    return { list: recommended, mode:"recommend" };
+  }
+
+  // Algorithm 1이 이 얼굴형에 대해 Recommend를 하나도 못 줄 때 —
+  // Not-Recommend로 명확히 걸러진 것만 빼고, 사용자가 고른 길이/
+  // 스타일과 얼마나 가까운지 점수를 매겨 상위 몇 개를 보여준다.
+  const fallbackPool =
+  withVerdict.filter(hair=> hair.verdict !== "Not-Recommend");
+
+  const scored =
+  fallbackPool
+  .map(hair=> ({ ...hair, matchPercent: matchPercent(hair, hairLength, style) }))
+  .sort((a, b)=> b.matchPercent - a.matchPercent)
+  .slice(0, 4);
+
+  return { list: scored, mode:"fallback" };
+}
+
+/* 남성 전용 — Algorithm 1을 쓰지 않고, 항목마다 미리 배정해둔
+   primaryFaceShape(일반적인 남성 그루밍 관례 기준)로만 매칭한다.
+   길이/스타일까지 맞는 게 있으면 그것만, 없으면 얼굴형만 맞는 전부를
+   보여준다 — 7주차 이전부터 쓰던 단순 매칭 방식 그대로다. */
+function hairDetailByConvention(shape, gender, hairLength, style){
+
+  const result =
+  hairDB.filter(hair=>
+    hair.gender === gender && hair.primaryFaceShape === shape
+  );
+
+  const filtered =
+  result.filter(hair=>
+    (hairLength === "" || hair.type === hairLength) &&
+    (style === "" || hair.style === style)
+  );
+
+  const list =
+  filtered.length > 0 ? filtered : result;
+
+  return { list, mode:"convention" };
 }
 
 /* ===== 메인 분석 함수 ===== */
@@ -1770,13 +2008,16 @@ async function runRecommendation(){
 
   const colorSource = season ? seasonDB[season] : skinToneDB[skinTone];
 
-  const recommend =
+  const matchResult =
   hairDetail(
     shape,
     gender,
     hairLength,
     style
   );
+
+  const recommend = matchResult.list;
+  const matchMode = matchResult.mode;
 
   lastRecommend =
   recommend;
@@ -1888,16 +2129,36 @@ async function runRecommendation(){
 
   }
 
+  if(matchMode === "fallback"){
+
+    hairCards.innerHTML +=
+    `<p class="note-box">Algorithm 1 기준으로 완전히 맞는 스타일이 없어, 길이·스타일이 가장 가까운 스타일을 매칭률과 함께 보여드려요.</p>`;
+
+  }
+
+  if(matchMode === "convention"){
+
+    hairCards.innerHTML +=
+    `<p class="note-box">논문 Algorithm 1은 여성 헤어스타일링 가이드라인 기준이라 남성에게는 그대로 적용하지 않았어요. 아래는 일반적인 남성 그루밍 관례를 기준으로 한 추천이에요.</p>`;
+
+  }
+
   recommend.forEach(hair=>{
 
+    // "Oval 추천" 같은 태그는 원래 배정된 얼굴형 전용 문구라, 다른
+    // 얼굴형 결과에 그대로 뜨면 reason과 같은 문제가 생긴다. convention
+    // 모드(남성)가 아니면 "~추천" 태그는 빼고 나머지만 보여준다.
     const tagHTML =
     hair
     .tags
+    .filter(tag=> matchMode === "convention" || !tag.endsWith("추천"))
     .map(tag=>`<span class="tag">${tag}</span>`)
     .join("");
 
+    // 근거 원칙(principleInfo)은 Algorithm 1에서 나온 설명이라,
+    // Algorithm 1을 적용하지 않는 남성(convention 모드)에는 보여주지 않는다.
     const principleInfo =
-    faceShapePrinciples[hair.primaryFaceShape];
+    matchMode === "convention" ? null : faceShapePrinciples[shape];
 
     const principleHTML =
     principleInfo
@@ -1912,6 +2173,26 @@ async function runRecommendation(){
       ? `<p class="note-box">${hair.note}</p>`
       : "";
 
+    const matchBadgeHTML =
+    matchMode === "fallback"
+      ? `<span class="tag confidence-low">${hair.matchPercent}% 일치</span>`
+      : matchMode === "convention"
+      ? `<span class="tag confidence-low">그루밍 관례 기준</span>`
+      : `<span class="tag confidence-high">Algorithm 1 추천</span>`;
+
+    // hair.reason은 "Oval Face는..." 식으로 특정 얼굴형을 못박아 쓴
+    // 문장이다. convention 모드(남성)는 항상 그 얼굴형으로만 보여주니
+    // 그대로 둬도 맞지만, Algorithm 1 모드(여성)는 이 항목이 원래
+    // 배정된 얼굴형이 아닌 다른 얼굴형에서도 나타날 수 있어서 그
+    // 설명이 안 맞을 수 있다 — 그래서 그 경우엔 숨긴다.
+    const reasonHTML =
+    matchMode === "convention"
+      ? `<p>
+          <strong>추천 이유</strong><br>
+          ${hair.reason}
+          </p>`
+      : "";
+
     hairCards.innerHTML += `
     <div class="hair-card">
 
@@ -1924,10 +2205,9 @@ async function runRecommendation(){
 
         <h4>${hair.name}</h4>
 
-        <p>
-        <strong>추천 이유</strong><br>
-        ${hair.reason}
-        </p>
+        ${matchBadgeHTML}
+
+        ${reasonHTML}
 
         <p>
         <strong>스타일 포인트</strong><br>
