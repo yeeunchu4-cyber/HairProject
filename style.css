@@ -696,6 +696,26 @@ video,#preview{
   color:#991b1b;
 }
 
+.show-more-btn{
+  grid-column:1 / -1;
+  background:none;
+  border:1px solid var(--accent);
+  color:var(--accent);
+  font-size:14px;
+  font-weight:700;
+  padding:10px 16px;
+  border-radius:999px;
+  cursor:pointer;
+  margin-top:4px;
+}
+
+.alt-hair-cards{
+  grid-column:1 / -1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:22px;
+}
+
 .shape-box{
   background:#fff;
   border:1px solid var(--card-border);

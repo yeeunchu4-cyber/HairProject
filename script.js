@@ -1682,6 +1682,82 @@ function renderScores(scores){
    범위를 벗어난 확장이다(hairDB의 남성 Square Face 항목에 이미
    달려있는 note 참고). ----------------------------------------- */
 
+/* Recommend 판정에 쓰이는 OR 조건들을 배열로 뽑아낸다. isItSuitable()의
+   Recommend 분기와 recommendStrength()(결과를 1개로 좁힐 때 쓰는 강도
+   점수)가 이 배열 하나를 공유해서, 두 곳의 조건이 따로 놀 위험을
+   없앤다. 조건 자체(각 얼굴형별 OR 항목)는 기존 isItSuitable()에 있던
+   것과 동일하다 — 그대로 옮기기만 했다. */
+function recommendConditions(faceShape, hairStyle){
+
+  const length =
+  hairStyle.type === "medium" ? "midLength" : hairStyle.type;
+
+  const { style, bang, layered } = hairStyle;
+
+  if(faceShape === "Round Face"){
+    return [
+      length === "midLength",
+      length === "long" && style === "mix",
+      layered === "slide",
+      bang === "sideSwept"
+    ];
+  }
+
+  if(faceShape === "Oval Face"){
+    return [
+      length === "midLength",
+      bang === "sideSwept",
+      style === "mix"
+    ];
+  }
+
+  if(faceShape === "Long Face"){ // 논문 원문 기준 oblong
+    return [
+      bang !== "none",
+      style === "wavy",
+      length === "short" && layered === "non"
+    ];
+  }
+
+  if(faceShape === "Square Face"){ // 논문 원문 기준 squared
+    return [
+      style === "wavy",
+      bang === "sideSwept",
+      layered === "slide",
+      length === "midLength" && layered === "non"
+    ];
+  }
+
+  if(faceShape === "Heart Face"){
+    return [
+      style === "wavy",
+      bang === "sideSwept",
+      length === "long" && style === "mix",
+      length === "short" && style === "mix"
+    ];
+  }
+
+  return [];
+}
+
+/* Recommend 조건 중 몇 개를 동시에 만족하는지를 0~100 점으로 환산한다.
+   Algorithm 1 자체는 "맞다/아니다"만 판정하고 그 안에서 순위를 매기지
+   않는데, 여러 스타일이 동시에 Recommend로 나올 때 "그중 뭐가 제일
+   나은지" 알 수 없다는 피드백을 받아 추가한, 논문에는 없는 이
+   프로젝트의 보완 로직이다. */
+function recommendStrength(faceShape, hairStyle){
+
+  const conditions =
+  recommendConditions(faceShape, hairStyle);
+
+  if(conditions.length === 0) return 0;
+
+  const hits =
+  conditions.filter(Boolean).length;
+
+  return Math.round((hits / conditions.length) * 100);
+}
+
 function isItSuitable(faceShape, hairStyle){
 
   const length =
@@ -1691,12 +1767,7 @@ function isItSuitable(faceShape, hairStyle){
 
   if(faceShape === "Round Face"){
 
-    if(
-      length === "midLength" ||
-      (length === "long" && style === "mix") ||
-      layered === "slide" ||
-      bang === "sideSwept"
-    ){
+    if(recommendConditions(faceShape, hairStyle).some(Boolean)){
       return "Recommend";
     }
 
@@ -1711,7 +1782,7 @@ function isItSuitable(faceShape, hairStyle){
   }
   else if(faceShape === "Oval Face"){
 
-    if(length === "midLength" || bang === "sideSwept" || style === "mix"){
+    if(recommendConditions(faceShape, hairStyle).some(Boolean)){
       return "Recommend";
     }
 
@@ -1722,11 +1793,7 @@ function isItSuitable(faceShape, hairStyle){
   }
   else if(faceShape === "Long Face"){ // 논문 원문 기준 oblong
 
-    if(
-      bang !== "none" ||
-      style === "wavy" ||
-      (length === "short" && layered === "non")
-    ){
+    if(recommendConditions(faceShape, hairStyle).some(Boolean)){
       return "Recommend";
     }
 
@@ -1741,12 +1808,7 @@ function isItSuitable(faceShape, hairStyle){
   }
   else if(faceShape === "Square Face"){ // 논문 원문 기준 squared
 
-    if(
-      style === "wavy" ||
-      bang === "sideSwept" ||
-      layered === "slide" ||
-      (length === "midLength" && layered === "non")
-    ){
+    if(recommendConditions(faceShape, hairStyle).some(Boolean)){
       return "Recommend";
     }
 
@@ -1762,12 +1824,7 @@ function isItSuitable(faceShape, hairStyle){
   }
   else if(faceShape === "Heart Face"){
 
-    if(
-      style === "wavy" ||
-      bang === "sideSwept" ||
-      (length === "long" && style === "mix") ||
-      (length === "short" && style === "mix")
-    ){
+    if(recommendConditions(faceShape, hairStyle).some(Boolean)){
       return "Recommend";
     }
 
@@ -1803,6 +1860,32 @@ function matchPercent(hair, hairLength, style){
   checks.filter(Boolean).length;
 
   return Math.round((hits / checks.length) * 100);
+}
+
+// "다른 추천 스타일 더보기" 버튼용 — 카드 HTML에 inline onclick으로
+// 연결되기 때문에 전역 스코프에 있어야 한다.
+function toggleAltHairCards(){
+
+  const box =
+  document.getElementById("altHairCards");
+
+  if(!box) return;
+
+  const opening =
+  box.style.display === "none";
+
+  box.style.display =
+  opening ? "grid" : "none";
+
+  const btn =
+  box.previousElementSibling;
+
+  if(btn && btn.classList.contains("show-more-btn")){
+    btn.textContent =
+    opening
+      ? btn.textContent.replace("더보기", "접기")
+      : btn.textContent.replace("접기", "더보기");
+  }
 }
 
 function hairDetail(
@@ -1841,12 +1924,29 @@ function hairDetail(
     (style === "" || hair.style === style)
   );
 
+  // 결과가 한꺼번에 여러 개 나오면 "그중 뭐가 제일 나은지 모르겠다"는
+  // 피드백이 있어서, Recommend 항목이 여럿이어도 1개만 메인으로 보여주고
+  // 나머지는 "다른 추천 더보기"로 분리한다. 순위는 1) 논문 OR 조건을
+  // 몇 개나 동시에 만족하는지(recommendStrength), 2) 사용자가 고른
+  // 길이·스타일과 얼마나 겹치는지(matchPercent) 순으로 매긴다 —
+  // 둘 다 숫자 하나로 "왜 1등인지" 설명 가능한 기준이다.
+  const rank =
+  (pool)=> pool
+  .map(hair=> ({
+    ...hair,
+    strength: recommendStrength(shape, hair),
+    matchPercent: matchPercent(hair, hairLength, style)
+  }))
+  .sort((a, b)=> (b.strength - a.strength) || (b.matchPercent - a.matchPercent));
+
   if(exact.length > 0){
-    return { list: exact, mode:"recommend" };
+    const ranked = rank(exact);
+    return { list: [ranked[0]], alternatives: ranked.slice(1), mode:"recommend" };
   }
 
   if(recommended.length > 0){
-    return { list: recommended, mode:"recommend" };
+    const ranked = rank(recommended);
+    return { list: [ranked[0]], alternatives: ranked.slice(1), mode:"recommend" };
   }
 
   // Algorithm 1이 이 얼굴형에 대해 Recommend를 하나도 못 줄 때 —
@@ -1861,7 +1961,11 @@ function hairDetail(
   .sort((a, b)=> b.matchPercent - a.matchPercent)
   .slice(0, 4);
 
-  return { list: scored, mode:"fallback" };
+  if(scored.length === 0){
+    return { list: [], alternatives: [], mode:"fallback" };
+  }
+
+  return { list: [scored[0]], alternatives: scored.slice(1), mode:"fallback" };
 }
 
 /* 남성 전용 — Algorithm 1을 쓰지 않고, 항목마다 미리 배정해둔
@@ -1881,10 +1985,22 @@ function hairDetailByConvention(shape, gender, hairLength, style){
     (style === "" || hair.style === style)
   );
 
-  const list =
+  const pool =
   filtered.length > 0 ? filtered : result;
 
-  return { list, mode:"convention" };
+  if(pool.length === 0){
+    return { list: [], alternatives: [], mode:"convention" };
+  }
+
+  // 그루밍 관례 매칭은 Algorithm 1처럼 조건 개수를 셀 기준이 없어서,
+  // 사용자가 고른 길이·스타일과의 일치율(matchPercent)만으로 1개를
+  // 골라 메인으로 보여주고 나머지는 대안으로 둔다.
+  const ranked =
+  pool
+  .map(hair=> ({ ...hair, matchPercent: matchPercent(hair, hairLength, style) }))
+  .sort((a, b)=> b.matchPercent - a.matchPercent);
+
+  return { list: [ranked[0]], alternatives: ranked.slice(1), mode:"convention" };
 }
 
 /* ===== 메인 분석 함수 ===== */
@@ -2042,6 +2158,7 @@ async function runRecommendation(){
   );
 
   const recommend = matchResult.list;
+  const alternatives = matchResult.alternatives || [];
   const matchMode = matchResult.mode;
 
   lastRecommend =
@@ -2168,7 +2285,10 @@ async function runRecommendation(){
 
   }
 
-  recommend.forEach(hair=>{
+  // 카드 하나를 그리는 로직을 함수로 빼서, 메인 베스트 매치 카드와
+  // "다른 추천 더보기"에 접히는 대안 카드들이 완전히 같은 마크업을
+  // 쓰도록 한다(isBest만 다름).
+  function buildHairCardHTML(hair, isBest){
 
     // "Oval 추천" 같은 태그는 원래 배정된 얼굴형 전용 문구라, 다른
     // 얼굴형 결과에 그대로 뜨면 reason과 같은 문제가 생긴다. convention
@@ -2192,12 +2312,14 @@ async function runRecommendation(){
       ? `<p class="note-box">${hair.note}</p>`
       : "";
 
-    // "Algorithm 1 추천" 배지는 정상적으로 추천된 항목 대부분에 뜨다
-    // 보니 정보량이 없어서 뺐다. 매칭률(fallback)과 그루밍 관례
-    // 안내(convention)는 결과가 왜 다르게 나오는지 설명해주는
-    // 정보라 유지한다.
+    // 결과가 여러 개 나오면 "뭐가 제일 나은지 모르겠다"는 피드백이
+    // 있어서, 메인으로 뽑힌 1개 카드에는 왜 1등인지(논문 조건 몇 개를
+    // 만족했는지)를 바로 보여준다. 매칭률(fallback)과 그루밍 관례
+    // 안내(convention)는 기존처럼 유지한다.
     const matchBadgeHTML =
-    matchMode === "fallback"
+    isBest && matchMode === "recommend"
+      ? `<span class="tag confidence-high">베스트 매치${hair.strength != null ? ` · 조건 일치도 ${hair.strength}%` : ""}</span>`
+      : matchMode === "fallback"
       ? `<span class="tag confidence-low">${hair.matchPercent}% 일치</span>`
       : matchMode === "convention"
       ? `<span class="tag confidence-low">그루밍 관례 기준</span>`
@@ -2216,7 +2338,7 @@ async function runRecommendation(){
           </p>`
       : "";
 
-    hairCards.innerHTML += `
+    return `
     <div class="hair-card">
 
       <img
@@ -2244,8 +2366,29 @@ async function runRecommendation(){
 
     </div>
     `;
+  }
 
+  recommend.forEach(hair=>{
+    hairCards.innerHTML += buildHairCardHTML(hair, true);
   });
+
+  // 메인으로 뽑히지 못한 나머지는 숨겨뒀다가, 사용자가 원할 때만
+  // 펼쳐서 보게 한다 — 정보를 아예 없애지는 않으면서도 "결과가
+  // 한눈에 하나로 보인다"는 피드백을 반영하기 위한 절충이다.
+  if(alternatives.length > 0){
+
+    hairCards.innerHTML += `
+    <button
+      type="button"
+      class="show-more-btn"
+      onclick="toggleAltHairCards()"
+    >다른 추천 스타일 더보기 (${alternatives.length})</button>
+    <div id="altHairCards" class="alt-hair-cards" style="display:none;">
+      ${alternatives.map(hair=> buildHairCardHTML(hair, false)).join("")}
+    </div>
+    `;
+
+  }
 
   const worstHairCards =
   document.getElementById("worstHairCards");
