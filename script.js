@@ -313,6 +313,39 @@ const seasonDB = {
 
 };
 
+/* skinToneDB/seasonDB의 추천·비추천 컬러는 전부 이름(텍스트)만
+   저장되어 있어서, "초코 브라운"이 정확히 어떤 색인지 한눈에 안
+   들어온다는 피드백에 대응해 대표 색상 코드를 붙여준다. 실제 염색
+   결과는 원래 모발 색·탈색 정도에 따라 달라지므로, 이건 "정확한
+   결과 색"이 아니라 색감을 가늠하기 위한 대표 색상이다. */
+const HAIR_COLOR_SWATCHES = {
+  "초코 브라운":"#3B2414",
+  "카라멜 브라운":"#8B5A2B",
+  "골드 브라운":"#9C6B30",
+  "애쉬 그레이":"#8C8680",
+  "실버":"#C0C0C0",
+  "플래티넘":"#E5E4E2",
+  "애쉬 브라운":"#6B5B4D",
+  "블루 블랙":"#0F1A2B",
+  "오렌지 브라운":"#A85C32",
+  "레드 브라운":"#7B2D26",
+  "내추럴 블랙":"#1C1C1C",
+  "다크 브라운":"#3B2A1F",
+  "모카 브라운":"#5C4033",
+  "비비드 레드":"#C41E3A",
+  "브라이트 오렌지":"#E8641C",
+  "캐러멜 브라운":"#9C6A3E",
+  "허니 브라운":"#B07A3E",
+  "버건디":"#6D1B2C",
+  "카키 브라운":"#6B5842",
+  "다크 카라멜":"#6E4524",
+  "로즈 브라운":"#8D5A54",
+  "라벤더 애쉬":"#8A7F94",
+  "다크 애쉬":"#4A4540",
+  "버건디 브라운":"#5C2A2E",
+  "베이지 브라운":"#A98868"
+};
+
 function getSeason(tone, ita){
 
   if(tone === "warm"){
@@ -688,6 +721,11 @@ async function startCamera(){
   camera.start();
 
   activeCamera = camera;
+
+  // 어떤 버튼을 눌러야 촬영되는지 헷갈린다는 피드백 — 라이브 카메라가
+  // 켜져 있을 때만 원형 촬영 버튼을 보여주고, 다시 촬영 버튼은 숨긴다.
+  document.getElementById("shutterBtn").style.display = "block";
+  document.getElementById("retakeBtn").style.display = "none";
 }
 
 async function capturePhoto(){
@@ -750,6 +788,11 @@ async function capturePhoto(){
   preview.style.display = "block";
   video.style.display = "none";
 
+  // 촬영이 끝났으니 원형 촬영 버튼은 숨기고, 다시 찍고 싶을 때 쓸
+  // "다시 촬영" 버튼을 보여준다.
+  document.getElementById("shutterBtn").style.display = "none";
+  document.getElementById("retakeBtn").style.display = "block";
+
   faceLandmarks = null;
 
   /* preview.src를 막 바꾼 직후라 이미지가 디코딩되기 전일 수 있다.
@@ -766,6 +809,22 @@ async function capturePhoto(){
   await faceMesh.send({
     image:preview
   });
+}
+
+// "다시 촬영" 버튼용 — 찍었거나 업로드한 사진을 지우고 라이브 카메라를
+// 처음 상태(startCamera 직후)로 다시 띄운다.
+async function retakePhoto(){
+
+  currentImage = null;
+  faceLandmarks = null;
+
+  const preview =
+  document.getElementById("preview");
+
+  preview.src = "";
+  preview.style.display = "none";
+
+  await startCamera();
 }
 
 async function uploadImage(event){
@@ -821,6 +880,11 @@ async function uploadImage(event){
     .getElementById("camera")
     .style
     .display = "none";
+
+    // 파일로 업로드한 경우에도 촬영 버튼은 의미가 없으니 숨기고,
+    // "다시 촬영"으로 라이브 카메라로 돌아갈 수 있게 해준다.
+    document.getElementById("shutterBtn").style.display = "none";
+    document.getElementById("retakeBtn").style.display = "block";
 
     try{
 
@@ -1125,31 +1189,34 @@ function getAnalysisReason(analysis){
   const ja =
   values.ja.toFixed(1);
 
+  // 숫자(비율)만 나열하면 사용자 입장에서 무슨 뜻인지 와닿지 않는다는
+  // 피드백 — 먼저 쉬운 말로 "어떻게 생겼길래 이 얼굴형인지"를 설명하고,
+  // 실제 측정값은 괄호 안에 근거로만 덧붙인다.
   if(shape === "Oval Face"){
 
-    return `얼굴 세로·가로 비율이 ${lw}이고 턱/광대 비율 ${jc}, 턱 각도 ${ja}도가 안정적으로 측정되어 전체적으로 균형 잡힌 Oval Face로 판단했습니다.`;
+    return `얼굴의 세로 길이와 가로 폭, 턱과 광대의 너비가 어느 한쪽으로 치우치지 않고 고르게 균형 잡혀 있어서 Oval(계란형)로 판단했어요. (세로/가로 비율 ${lw}, 턱/광대 비율 ${jc}, 턱 각도 ${ja}도)`;
 
   }
 
   if(shape === "Round Face"){
 
-    return `얼굴 세로·가로 비율이 ${lw}로 비교적 짧고 턱선이 부드럽게 측정되어 Round Face 특징이 강하게 나타났습니다.`;
+    return `얼굴의 세로 길이가 가로 폭에 비해 짧은 편이고, 턱선이 각지지 않고 둥글게 이어져 있어서 Round(둥근형)로 판단했어요. (세로/가로 비율 ${lw})`;
 
   }
 
   if(shape === "Heart Face"){
 
-    return `이마/턱 비율 ${fj}, 이마/광대 비율 ${fc}를 기준으로 이마가 넓고 턱선이 좁은 Heart Face 특징이 나타났습니다.`;
+    return `이마 쪽 폭이 턱 쪽 폭보다 눈에 띄게 넓게 측정돼서, 위는 넓고 아래로 갈수록 좁아지는 Heart(하트형)로 판단했어요. (이마/턱 비율 ${fj}, 이마/광대 비율 ${fc})`;
 
   }
 
   if(shape === "Long Face"){
 
-    return `얼굴 세로·가로 비율이 ${lw}로 높게 측정되어 얼굴이 세로로 긴 Long Face 특징이 나타났습니다.`;
+    return `얼굴의 세로 길이가 가로 폭보다 많이 길게 측정돼서 Long(긴 얼굴형)으로 판단했어요. (세로/가로 비율 ${lw})`;
 
   }
 
-  return `턱/광대 비율 ${jc}와 턱 각도 ${ja}도를 기준으로 턱선이 비교적 또렷한 Square Face 특징이 나타났습니다.`;
+  return `턱 폭이 광대 폭과 비슷할 만큼 넓고, 턱선이 완만하게 이어지지 않고 각이 진 형태로 측정돼서 Square(각진형)로 판단했어요. (턱/광대 비율 ${jc}, 턱 각도 ${ja}도)`;
 }
 
 /* -----------------------------------------------------
@@ -1758,6 +1825,54 @@ function recommendStrength(faceShape, hairStyle){
   return Math.round((hits / conditions.length) * 100);
 }
 
+/* recommendConditions()와 정확히 같은 순서로 쓴, 각 조건을 사람이
+   읽을 수 있는 문구로 옮긴 표. "다른 추천 스타일"에 여러 개가 뜰 때
+   "왜 이것도 추천됐는지" 알 수 없다는 피드백에 대응하기 위해, 실제로
+   만족한 조건만 골라 이유로 보여주는 데 쓴다. */
+const RECOMMEND_CONDITION_LABELS = {
+  "Round Face":[
+    "중간 길이",
+    "긴 길이 + 믹스 스타일",
+    "슬라이드 레이어",
+    "사이드로 넘긴 앞머리"
+  ],
+  "Oval Face":[
+    "중간 길이",
+    "사이드로 넘긴 앞머리",
+    "믹스 스타일"
+  ],
+  "Long Face":[
+    "앞머리가 있는 스타일",
+    "웨이브 스타일",
+    "짧은 길이 + 레이어 없음"
+  ],
+  "Square Face":[
+    "웨이브 스타일",
+    "사이드로 넘긴 앞머리",
+    "슬라이드 레이어",
+    "중간 길이 + 레이어 없음"
+  ],
+  "Heart Face":[
+    "웨이브 스타일",
+    "사이드로 넘긴 앞머리",
+    "긴 길이 + 믹스 스타일",
+    "짧은 길이 + 믹스 스타일"
+  ]
+};
+
+function recommendReasons(faceShape, hairStyle){
+
+  const conditions =
+  recommendConditions(faceShape, hairStyle);
+
+  const labels =
+  RECOMMEND_CONDITION_LABELS[faceShape] || [];
+
+  return conditions
+  .map((hit, i)=> hit ? labels[i] : null)
+  .filter(Boolean);
+}
+
 function isItSuitable(faceShape, hairStyle){
 
   const length =
@@ -1935,7 +2050,8 @@ function hairDetail(
   .map(hair=> ({
     ...hair,
     strength: recommendStrength(shape, hair),
-    matchPercent: matchPercent(hair, hairLength, style)
+    matchPercent: matchPercent(hair, hairLength, style),
+    reasons: recommendReasons(shape, hair)
   }))
   .sort((a, b)=> (b.strength - a.strength) || (b.matchPercent - a.matchPercent));
 
@@ -2217,10 +2333,26 @@ async function runRecommendation(){
     { lw, jc, fj, ja }
   );
 
+  // "추천 설명이 이해가 잘 안 된다"는 피드백 — 얼굴형·피부톤 결과를
+  // 묶어서 설명하는 것에서 그치지 않고, 실제로 1등으로 뽑힌 스타일이
+  // 왜 뽑혔는지(이미 계산해둔 reasons/matchPercent)까지 문장으로
+  // 풀어서 보여준다.
+  const bestStyle =
+  recommend[0];
+
+  const mainReasonText =
+  !bestStyle
+    ? `${shapeKorean[shape]} 얼굴형과 ${skinToneLabel} 분석 결과를 바탕으로 찾아봤지만, 조건에 맞는 헤어스타일을 찾지 못했어요.`
+    : matchMode === "recommend" && bestStyle.reasons && bestStyle.reasons.length > 0
+    ? `${shapeKorean[shape]} 얼굴형과 ${skinToneLabel} 분석 결과를 바탕으로 헤어스타일과 헤어 컬러를 추천해요. 그중 "${bestStyle.name}"을 가장 먼저 보여드리는 이유는, 논문 기준으로 이 얼굴형에 적합하다고 보는 조건인 ${bestStyle.reasons.join(", ")}에 해당하기 때문이에요.`
+    : matchMode === "fallback"
+    ? `${shapeKorean[shape]} 얼굴형과 ${skinToneLabel} 분석 결과를 바탕으로 찾아봤는데, 완벽하게 맞는 조건의 스타일은 없었어요. 그래서 원하시는 길이·스타일과 가장 비슷한 "${bestStyle.name}"(일치도 ${bestStyle.matchPercent}%)을 보여드려요.`
+    : `${shapeKorean[shape]} 얼굴형과 ${skinToneLabel} 분석 결과를 바탕으로, 일반적인 남성 그루밍 관례에 맞는 "${bestStyle.name}"을 추천해요.`;
+
   document
   .getElementById("mainReason")
   .innerText =
-  `${shapeKorean[shape]} 얼굴형과 ${skinToneLabel} 분석 결과를 바탕으로 헤어스타일과 헤어 컬러를 추천합니다.`;
+  mainReasonText;
 
   const skinText =
   document.getElementById("skinToneDescription");
@@ -2238,12 +2370,22 @@ async function runRecommendation(){
   bestColorRow.innerHTML =
   "<strong>추천 컬러</strong>";
 
+  // 색상 이름만 봐선 어떤 색인지 감이 안 온다는 피드백 — 대표 색상
+  // 코드가 있으면 동그란 스와치를 같이 보여준다.
+  const colorTagHTML =
+  (color)=>{
+    const hex = HAIR_COLOR_SWATCHES[color];
+    const dotHTML =
+    hex ? `<span class="color-dot" style="background:${hex};"></span>` : "";
+    return `<span class="color-tag">${dotHTML}${color}</span>`;
+  };
+
   colorSource
   .recommend
   .forEach(color=>{
 
     bestColorRow.innerHTML +=
-    `<span class="color-tag">${color}</span>`;
+    colorTagHTML(color);
 
   });
 
@@ -2255,7 +2397,7 @@ async function runRecommendation(){
   .forEach(color=>{
 
     worstColorRow.innerHTML +=
-    `<span class="color-tag">${color}</span>`;
+    colorTagHTML(color);
 
   });
 
@@ -2288,7 +2430,7 @@ async function runRecommendation(){
   // 카드 하나를 그리는 로직을 함수로 빼서, 메인 베스트 매치 카드와
   // "다른 추천 더보기"에 접히는 대안 카드들이 완전히 같은 마크업을
   // 쓰도록 한다(isBest만 다름).
-  function buildHairCardHTML(hair, isBest){
+  function buildHairCardHTML(hair, isBest, rank){
 
     // "Oval 추천" 같은 태그는 원래 배정된 얼굴형 전용 문구라, 다른
     // 얼굴형 결과에 그대로 뜨면 reason과 같은 문제가 생긴다. convention
@@ -2313,12 +2455,12 @@ async function runRecommendation(){
       : "";
 
     // 결과가 여러 개 나오면 "뭐가 제일 나은지 모르겠다"는 피드백이
-    // 있어서, 메인으로 뽑힌 1개 카드에는 왜 1등인지(논문 조건 몇 개를
-    // 만족했는지)를 바로 보여준다. 매칭률(fallback)과 그루밍 관례
-    // 안내(convention)는 기존처럼 유지한다.
+    // 있어서, 메인 카드는 왜 1등인지, 더보기로 펼쳐지는 나머지도 몇
+    // 위이고 왜 추천됐는지를 숫자로 바로 보여준다. 매칭률(fallback)과
+    // 그루밍 관례 안내(convention)는 기존처럼 유지한다.
     const matchBadgeHTML =
-    isBest && matchMode === "recommend"
-      ? `<span class="tag confidence-high">베스트 매치${hair.strength != null ? ` · 조건 일치도 ${hair.strength}%` : ""}</span>`
+    matchMode === "recommend"
+      ? `<span class="tag confidence-high">${isBest ? "베스트 매치" : `${rank}위`}${hair.strength != null ? ` · 조건 일치도 ${hair.strength}%` : ""}</span>`
       : matchMode === "fallback"
       ? `<span class="tag confidence-low">${hair.matchPercent}% 일치</span>`
       : matchMode === "convention"
@@ -2338,6 +2480,15 @@ async function runRecommendation(){
           </p>`
       : "";
 
+    // "다른 추천 스타일이 왜 적합한지 모르겠다"는 피드백 대응 —
+    // isItSuitable()이 실제로 만족시킨 조건(recommendReasons)을
+    // 그대로 사람이 읽을 문장으로 보여준다. 베스트 카드에도 똑같이
+    // 보여줘서 1등도 "왜 1등인지" 설명되게 한다.
+    const whyRecommendedHTML =
+    matchMode === "recommend" && hair.reasons && hair.reasons.length > 0
+      ? `<p class="note-box">이 스타일이 적합한 이유: <strong>${hair.reasons.join(", ")}</strong> 조건에 해당해요.</p>`
+      : "";
+
     return `
     <div class="hair-card">
 
@@ -2354,6 +2505,8 @@ async function runRecommendation(){
 
         ${reasonHTML}
 
+        ${whyRecommendedHTML}
+
         ${pointHTML}
 
         ${noteHTML}
@@ -2369,12 +2522,13 @@ async function runRecommendation(){
   }
 
   recommend.forEach(hair=>{
-    hairCards.innerHTML += buildHairCardHTML(hair, true);
+    hairCards.innerHTML += buildHairCardHTML(hair, true, 1);
   });
 
   // 메인으로 뽑히지 못한 나머지는 숨겨뒀다가, 사용자가 원할 때만
   // 펼쳐서 보게 한다 — 정보를 아예 없애지는 않으면서도 "결과가
-  // 한눈에 하나로 보인다"는 피드백을 반영하기 위한 절충이다.
+  // 한눈에 하나로 보인다"는 피드백을 반영하기 위한 절충이다. 순위는
+  // 메인(1위) 다음이니 2위부터 시작한다.
   if(alternatives.length > 0){
 
     hairCards.innerHTML += `
@@ -2384,7 +2538,7 @@ async function runRecommendation(){
       onclick="toggleAltHairCards()"
     >다른 추천 스타일 더보기 (${alternatives.length})</button>
     <div id="altHairCards" class="alt-hair-cards" style="display:none;">
-      ${alternatives.map(hair=> buildHairCardHTML(hair, false)).join("")}
+      ${alternatives.map((hair, i)=> buildHairCardHTML(hair, false, i + 2)).join("")}
     </div>
     `;
 

@@ -447,6 +447,39 @@ video,#preview{
 .camera-tip strong{
   color:var(--accent);
 }
+.shutter-btn{
+  display:block;
+  width:68px;
+  height:68px;
+  margin:16px auto 0;
+  border-radius:50%;
+  background:#fff;
+  border:4px solid var(--accent);
+  cursor:pointer;
+  position:relative;
+}
+.shutter-btn::before{
+  content:"";
+  position:absolute;
+  inset:8px;
+  border-radius:50%;
+  background:var(--accent);
+}
+.shutter-btn:active::before{
+  background:#1d4ed8;
+}
+.retake-btn{
+  display:block;
+  margin:14px auto 0;
+  background:none;
+  border:1px solid #9ca3af;
+  color:#374151;
+  font-size:14px;
+  font-weight:700;
+  padding:8px 16px;
+  border-radius:999px;
+  cursor:pointer;
+}
 .analyze-btn{
   width:230px;
   margin-top:20px;
@@ -799,11 +832,23 @@ video,#preview{
 }
 
 .color-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
   padding:8px 12px;
   border-radius:999px;
   background:#fff;
   border:1px solid var(--card-border);
   font-weight:bold;
+}
+
+.color-dot{
+  display:inline-block;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  border:1px solid rgba(0,0,0,0.15);
+  flex-shrink:0;
 }
 
 .empty-text{

@@ -195,6 +195,21 @@
         style="margin-top:20px;"
       >
 
+      <button
+        id="retakeBtn"
+        class="retake-btn"
+        onclick="retakePhoto()"
+        style="display:none;"
+      >🔄 다시 촬영</button>
+
+      <button
+        id="shutterBtn"
+        class="shutter-btn"
+        onclick="capturePhoto()"
+        style="display:none;"
+        aria-label="촬영"
+      ></button>
+
       <button class="analyze-btn" onclick="runRecommendation()">분석 시작</button>
 
     </div>
