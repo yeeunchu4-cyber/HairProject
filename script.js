@@ -1640,44 +1640,44 @@ const worstHairDB = {
 
   "Round Face":{
     items:[
-      { name:"무거운 일자단발", reason:"귀 밑에서 일자로 뚝 자른 단발은 옆으로 볼륨이 생겨서 얼굴이 더 둥글고 넓어 보일 수 있어요." },
-      { name:"볼륨 없는 생머리", reason:"층 없이 밋밋하게 떨어지는 생머리는 세로 라인을 살려주지 못해서 얼굴이 더 넓적해 보일 수 있어요." },
-      { name:"짧은 숏컷", reason:"귀 위로 짧게 자른 숏컷은 볼 라인을 그대로 드러내서 둥근 느낌을 가려주지 못해요." }
+      { name:"무거운 일자단발", image:"images/bluntbob.jpg", reason:"귀 밑에서 일자로 뚝 자른 단발은 옆으로 볼륨이 생겨서 얼굴이 더 둥글고 넓어 보일 수 있어요." },
+      { name:"볼륨 없는 생머리", image:"images/flathair.jpg", reason:"층 없이 밋밋하게 떨어지는 생머리는 세로 라인을 살려주지 못해서 얼굴이 더 넓적해 보일 수 있어요." },
+      { name:"짧은 숏컷", image:"images/shorthair.jpg", reason:"귀 위로 짧게 자른 숏컷은 볼 라인을 그대로 드러내서 둥근 느낌을 가려주지 못해요." }
     ],
     confidence:"high"
   },
 
   "Oval Face":{
     items:[
-      { name:"픽시컷 (매우 짧은 길이)", reason:"아주 짧게 자른 픽시컷은 균형 잡힌 얼굴 비율을 가려버려서 오히려 원래 장점을 살리지 못해요." },
-      { name:"숏컷 + 웨이브펌 조합", reason:"짧은 길이에 웨이브까지 더하면 볼륨이 옆으로 퍼져서 자연스러운 균형이 깨질 수 있어요." }
+      { name:"픽시컷 (매우 짧은 길이)", image:"images/pixiecut.jpg", reason:"아주 짧게 자른 픽시컷은 균형 잡힌 얼굴 비율을 가려버려서 오히려 원래 장점을 살리지 못해요." },
+      { name:"숏컷 + 웨이브펌 조합", image:"images/shortwavyhair.jpg", reason:"짧은 길이에 웨이브까지 더하면 볼륨이 옆으로 퍼져서 자연스러운 균형이 깨질 수 있어요." }
     ],
     confidence:"high"
   },
 
   "Heart Face":{
     items:[
-      { name:"정수리 볼륨 스타일", reason:"정수리에 볼륨을 준 스타일은 이마를 더 넓어 보이게 해서 위가 넓고 아래가 좁은 느낌을 강조해요." },
-      { name:"짧은 앞머리", reason:"짧고 일자로 자른 앞머리는 넓은 이마를 그대로 드러내서 얼굴 위쪽이 더 커 보이게 해요." },
-      { name:"위쪽 집중 펌", reason:"머리 위쪽에만 볼륨을 주는 펌은 좁은 턱과 대비되어 얼굴형이 더 불균형해 보일 수 있어요." }
+      { name:"정수리 볼륨 스타일", image:"images/crownvolume.jpg", reason:"정수리에 볼륨을 준 스타일은 이마를 더 넓어 보이게 해서 위가 넓고 아래가 좁은 느낌을 강조해요." },
+      { name:"짧은 앞머리", image:"images/bangs.jpg", reason:"짧고 일자로 자른 앞머리는 넓은 이마를 그대로 드러내서 얼굴 위쪽이 더 커 보이게 해요." },
+      { name:"위쪽 집중 펌", image:"images/topvolumeperm.jpg", reason:"머리 위쪽에만 볼륨을 주는 펌은 좁은 턱과 대비되어 얼굴형이 더 불균형해 보일 수 있어요." }
     ],
     confidence:"high"
   },
 
   "Long Face":{
     items:[
-      { name:"초장발 생머리", reason:"허리까지 오는 긴 생머리는 세로선을 강조해서 얼굴이 실제보다 더 길어 보이게 해요." },
-      { name:"높은 포마드", reason:"정수리 위로 높게 세운 스타일은 세로 길이를 한층 더 늘려 보이게 만들어요." },
-      { name:"정수리 볼륨펌", reason:"머리 위쪽에 볼륨을 주는 펌은 얼굴 길이를 더 강조해서 역효과가 날 수 있어요." }
+      { name:"초장발 생머리", image:"images/verylonghair.jpg", reason:"허리까지 오는 긴 생머리는 세로선을 강조해서 얼굴이 실제보다 더 길어 보이게 해요." },
+      { name:"높은 포마드", image:"images/pompadour.jpg", reason:"정수리 위로 높게 세운 스타일은 세로 길이를 한층 더 늘려 보이게 만들어요." },
+      { name:"정수리 볼륨펌", image:"images/crownvolumeperm.jpg", reason:"머리 위쪽에 볼륨을 주는 펌은 얼굴 길이를 더 강조해서 역효과가 날 수 있어요." }
     ],
     confidence:"high"
   },
 
   "Square Face":{
     items:[
-      { name:"완전 밀착 숏컷", reason:"머리에 완전히 붙는 짧은 숏컷은 각진 턱선을 그대로 드러내서 더 딱딱해 보일 수 있어요." },
-      { name:"일자 단발", reason:"일자로 뚝 잘린 단발선이 각진 턱선과 나란히 이어져서 각진 느낌을 두 배로 강조해요." },
-      { name:"턱선 강조 스타일", reason:"턱 주변에 볼륨이나 포인트를 주는 스타일은 이미 뚜렷한 턱선을 더 도드라지게 만들어요." }
+      { name:"완전 밀착 숏컷", image:"images/buzzcut.jpg", reason:"머리에 완전히 붙는 짧은 숏컷은 각진 턱선을 그대로 드러내서 더 딱딱해 보일 수 있어요." },
+      { name:"일자 단발", image:"images/bluntbob.jpg", reason:"일자로 뚝 잘린 단발선이 각진 턱선과 나란히 이어져서 각진 느낌을 두 배로 강조해요." },
+      { name:"턱선 강조 스타일", image:"images/jawvolume.jpg", reason:"턱 주변에 볼륨이나 포인트를 주는 스타일은 이미 뚜렷한 턱선을 더 도드라지게 만들어요." }
     ],
     confidence:"high"
   }
@@ -2569,8 +2569,18 @@ async function runRecommendation(){
 
     worstList.forEach(item=>{
 
+      // 이미지가 없으면 텍스트만 봐선 어떤 스타일인지 이해가 안 된다는
+      // 피드백 — 이미지가 준비된 항목만 보여주고, 아직 없는 항목은
+      // 기존처럼 텍스트만 보여준다(잘못된 사진을 억지로 넣지 않기 위해).
+      const worstImageHTML =
+      item.image
+        ? `<img src="${item.image}" onerror="this.style.display='none'">`
+        : "";
+
       worstHairCards.innerHTML += `
       <div class="hair-card">
+
+        ${worstImageHTML}
 
         <div class="hair-info">
 
