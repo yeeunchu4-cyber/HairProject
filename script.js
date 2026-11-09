@@ -140,6 +140,18 @@ function initGoogleLogin(){
 function handleGoogleCredential(response){
   const payload = JSON.parse(atob(response.credential.split(".")[1]));
 
+  // 지금까지는 localStorage에 "로그인했다"는 표시만 남기고, 실제
+  // Firebase Auth 로그인은 한 번도 안 시키고 있었다. 그래서
+  // auth.currentUser가 계속 null이라 getIdToken()이 필요한 기능
+  // (AI 합성 미리보기)이 구글 로그인 사용자한테는 항상 실패했다 —
+  // 구글 자격증명으로 Firebase Auth에도 실제로 로그인시킨다.
+  const credential =
+  firebase.auth.GoogleAuthProvider.credential(response.credential);
+
+  auth.signInWithCredential(credential).catch(error=>{
+    console.error("Firebase Google 로그인 실패:", error);
+  });
+
   localStorage.setItem("login", "true");
   localStorage.setItem("userId", payload.email);
   localStorage.setItem("userName", payload.name);
