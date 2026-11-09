@@ -1979,6 +1979,104 @@ function matchPercent(hair, hairLength, style){
 
 // "다른 추천 스타일 더보기" 버튼용 — 카드 HTML에 inline onclick으로
 // 연결되기 때문에 전역 스코프에 있어야 한다.
+// AI(Gemini)로 베스트 매치 스타일을 현재 사진에 합성해서 미리 보여준다.
+// 핵심 분석(얼굴형/피부톤/매칭)은 전부 브라우저에서 처리하지만, 이
+// 기능만큼은 API 키를 숨겨야 해서 Firebase Functions(synthesizeHairstyle)를
+// 거친다 — 유일하게 서버를 타는 부분이라는 걸 기억해둘 것.
+const SYNTHESIZE_FUNCTION_URL =
+"https://us-central1-hairstylefinder.cloudfunctions.net/synthesizeHairstyle";
+
+async function synthesizeHairstylePreview(){
+
+  if(!auth.currentUser){
+    alert("AI 합성 미리보기는 로그인 후 이용할 수 있어요.");
+    return;
+  }
+
+  if(!currentImage || lastRecommend.length === 0){
+    alert("먼저 분석을 완료해주세요!");
+    return;
+  }
+
+  const style =
+  lastRecommend[0];
+
+  const modal =
+  document.getElementById("aiPreviewModal");
+
+  const resultImg =
+  document.getElementById("aiPreviewImage");
+
+  const statusText =
+  document.getElementById("aiPreviewStatus");
+
+  modal.style.display = "flex";
+  resultImg.style.display = "none";
+  statusText.textContent =
+  "AI가 헤어스타일을 합성하는 중이에요... (몇 초에서 십몇 초 정도 걸릴 수 있어요)";
+
+  try{
+
+    const idToken =
+    await auth.currentUser.getIdToken();
+
+    // currentImage는 "data:image/png;base64,AAAA..." 형태의 data URL.
+    // Functions로는 순수 base64만 보내고 mimeType은 따로 알려준다.
+    const commaIndex =
+    currentImage.indexOf(",");
+
+    const mimeType =
+    currentImage.slice(5, commaIndex).split(";")[0];
+
+    const base64Data =
+    currentImage.slice(commaIndex + 1);
+
+    const response =
+    await fetch(SYNTHESIZE_FUNCTION_URL, {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":`Bearer ${idToken}`
+      },
+      body: JSON.stringify({
+        imageBase64: base64Data,
+        mimeType: mimeType,
+        styleName: style.name,
+        styleDescription: style.point || style.reason || ""
+      })
+    });
+
+    const data =
+    await response.json();
+
+    if(!response.ok){
+      throw new Error(data.error || "합성에 실패했습니다.");
+    }
+
+    resultImg.src =
+    `data:${data.mimeType};base64,${data.imageBase64}`;
+
+    resultImg.style.display = "block";
+
+    statusText.textContent =
+    `"${style.name}" 스타일을 적용한 미리보기예요.`;
+
+  }
+  catch(error){
+
+    console.error(error);
+
+    statusText.textContent =
+    "미리보기 생성에 실패했어요: " + error.message;
+
+  }
+
+}
+
+function closeAiPreview(){
+  document.getElementById("aiPreviewModal").style.display = "none";
+}
+
 function toggleAltHairCards(){
 
   const box =
@@ -2489,6 +2587,15 @@ async function runRecommendation(){
       ? `<p class="note-box">이 스타일이 적합한 이유: <strong>${hair.reasons.join(", ")}</strong> 조건에 해당해요.</p>`
       : "";
 
+    // 베스트 매치 카드에만 AI 합성 미리보기 버튼을 둔다. 실제 스타일
+    // 데이터는 onclick 문자열에 직접 넣지 않고(따옴표 깨짐 방지),
+    // synthesizeHairstylePreview()가 lastRecommend[0]을 그대로
+    // 읽어가게 한다.
+    const aiPreviewButtonHTML =
+    isBest
+      ? `<button type="button" class="ai-preview-btn" onclick="synthesizeHairstylePreview()">✨ AI로 이 스타일 미리 써보기</button>`
+      : "";
+
     return `
     <div class="hair-card">
 
@@ -2514,6 +2621,8 @@ async function runRecommendation(){
         <div class="tag-row">
         ${tagHTML}
         </div>
+
+        ${aiPreviewButtonHTML}
 
       </div>
 
