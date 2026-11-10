@@ -105,7 +105,9 @@ exports.synthesizeHairstyle = onRequest(
         text:
           `위 사진은 합성 대상 인물 사진이다. 이 사람의 얼굴, 피부, 표정, 배경, 옷은 ` +
           `절대 바꾸지 말고, 머리 스타일만 "${styleName}"(${styleDescription || ""}) ` +
-          `스타일로 자연스럽게 바꿔줘. 사진 전체가 사실적인 한 장의 인물 사진처럼 보여야 해.`
+          `스타일로 바꿔줘. 원래 머리와 비슷한 수준으로 애매하게 남겨두지 말고, ` +
+          `길이·질감·전체 형태가 원래 사진과 눈에 띄게 달라져서 "${styleName}" 스타일로 ` +
+          `바뀌었다는 게 한눈에 보여야 해. 사진 전체가 사실적인 한 장의 인물 사진처럼 보여야 해.`
       });
 
       const response = await ai.models.generateContent({

@@ -2026,6 +2026,51 @@ async function fetchImageAsBase64(url){
   };
 }
 
+// 폰 카메라로 직접 찍거나 갤러리에서 고른 사진은 해상도가 매우 커서
+// (수 MB~십수 MB) PNG data URL로 그대로 보내면 "이미지 용량이 너무
+// 큽니다" 오류가 났다. AI 합성 요청에서만, 긴 변 기준 1024px로
+// 줄이고 JPEG로 다시 인코딩해서 용량을 크게 줄인다. currentImage
+// 원본 자체는 건드리지 않는다(분석/저장 등 다른 기능에 계속 쓰임).
+async function resizeImageForSynthesis(dataUrl, maxDim){
+
+  const img =
+  new Image();
+
+  await new Promise((resolve, reject)=>{
+    img.onload = resolve;
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+
+  let width = img.naturalWidth;
+  let height = img.naturalHeight;
+
+  if(width > maxDim || height > maxDim){
+    const scale = maxDim / Math.max(width, height);
+    width = Math.round(width * scale);
+    height = Math.round(height * scale);
+  }
+
+  const canvas =
+  document.createElement("canvas");
+
+  canvas.width = width;
+  canvas.height = height;
+
+  canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+
+  const resizedDataUrl =
+  canvas.toDataURL("image/jpeg", 0.85);
+
+  const commaIndex =
+  resizedDataUrl.indexOf(",");
+
+  return {
+    mimeType: "image/jpeg",
+    base64: resizedDataUrl.slice(commaIndex + 1)
+  };
+}
+
 async function synthesizeHairstylePreview(){
 
   if(!auth.currentUser){
@@ -2060,16 +2105,11 @@ async function synthesizeHairstylePreview(){
     const idToken =
     await auth.currentUser.getIdToken();
 
-    // currentImage는 "data:image/png;base64,AAAA..." 형태의 data URL.
-    // Functions로는 순수 base64만 보내고 mimeType은 따로 알려준다.
-    const commaIndex =
-    currentImage.indexOf(",");
-
-    const mimeType =
-    currentImage.slice(5, commaIndex).split(";")[0];
-
-    const base64Data =
-    currentImage.slice(commaIndex + 1);
+    // 폰 카메라 원본 그대로 보내면 용량 초과로 거부되니, 합성 요청
+    // 전용으로 1024px/JPEG로 줄인 사본을 만든다. currentImage 자체는
+    // 그대로 둬서 분석 결과·저장 등 다른 기능에 영향 없다.
+    const { mimeType, base64: base64Data } =
+    await resizeImageForSynthesis(currentImage, 1024);
 
     // 텍스트 설명만으로는 Gemini가 길이·컬 모양을 마음대로 해석해서
     // (예: C컬펌인데 훨씬 짧게 나오는 등) 참고 사진이랑 다르게 나올 수
