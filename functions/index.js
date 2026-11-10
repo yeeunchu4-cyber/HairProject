@@ -52,7 +52,14 @@ exports.synthesizeHairstyle = onRequest(
       return;
     }
 
-    const { imageBase64, mimeType, styleName, styleDescription } = req.body || {};
+    const {
+      imageBase64,
+      mimeType,
+      styleName,
+      styleDescription,
+      styleImageBase64,
+      styleImageMimeType
+    } = req.body || {};
 
     if (!imageBase64 || typeof imageBase64 !== "string") {
       res.status(400).json({ error: "imageBase64가 필요합니다." });
@@ -73,20 +80,40 @@ exports.synthesizeHairstyle = onRequest(
 
       const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY.value() });
 
-      const prompt =
-        `이 사람의 사진에서 얼굴, 피부, 표정, 배경, 옷은 절대 바꾸지 말고, ` +
-        `머리 스타일만 "${styleName}"(${styleDescription || ""}) 스타일로 자연스럽게 바꿔줘. ` +
-        `사진 전체가 사실적인 한 장의 인물 사진처럼 보여야 해.`;
+      // 텍스트 설명만으로는 길이·컬 모양 같은 디테일이 모델 마음대로
+      // 나와서(처음엔 C컬펌인데 너무 짧게 나왔다), hairDB의 실제 참고
+      // 사진을 두 번째 이미지로 같이 넣어서 "이 사진의 헤어스타일과
+      // 비슷하게"로 지시한다. 참고 사진이 없으면 기존처럼 텍스트만 쓴다.
+      const requestParts = [];
+
+      if (styleImageBase64) {
+        requestParts.push({
+          inlineData: { mimeType: styleImageMimeType || "image/jpeg", data: styleImageBase64 }
+        });
+        requestParts.push({
+          text:
+            `위 사진은 목표로 하는 헤어스타일 "${styleName}"의 참고 사진이다. ` +
+            `길이, 컬/웨이브 모양, 전체적인 실루엣을 이 참고 사진과 최대한 비슷하게 맞춰줘.`
+        });
+      }
+
+      requestParts.push({
+        inlineData: { mimeType: mimeType || "image/jpeg", data: imageBase64 }
+      });
+
+      requestParts.push({
+        text:
+          `위 사진은 합성 대상 인물 사진이다. 이 사람의 얼굴, 피부, 표정, 배경, 옷은 ` +
+          `절대 바꾸지 말고, 머리 스타일만 "${styleName}"(${styleDescription || ""}) ` +
+          `스타일로 자연스럽게 바꿔줘. 사진 전체가 사실적인 한 장의 인물 사진처럼 보여야 해.`
+      });
 
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-image",
         contents: [
           {
             role: "user",
-            parts: [
-              { inlineData: { mimeType: mimeType || "image/jpeg", data: imageBase64 } },
-              { text: prompt }
-            ]
+            parts: requestParts
           }
         ],
         config: {
@@ -94,8 +121,8 @@ exports.synthesizeHairstyle = onRequest(
         }
       });
 
-      const parts = response?.candidates?.[0]?.content?.parts || [];
-      const imagePart = parts.find((part) => part.inlineData);
+      const responseParts = response?.candidates?.[0]?.content?.parts || [];
+      const imagePart = responseParts.find((part) => part.inlineData);
 
       if (!imagePart) {
         logger.error("Gemini 응답에 이미지가 없음", JSON.stringify(response));

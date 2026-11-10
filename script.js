@@ -1998,6 +1998,34 @@ function matchPercent(hair, hairLength, style){
 const SYNTHESIZE_FUNCTION_URL =
 "https://us-central1-hairstylefinder.cloudfunctions.net/synthesizeHairstyle";
 
+// 같은 출처(images/...)의 정적 이미지를 fetch해서 base64 data URL로
+// 바꾼다. synthesizeHairstylePreview()가 스타일 참고 사진을 Gemini에
+// 같이 보낼 때 쓴다.
+async function fetchImageAsBase64(url){
+
+  const res =
+  await fetch(url);
+
+  const blob =
+  await res.blob();
+
+  const dataUrl =
+  await new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=> resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+
+  const commaIndex =
+  dataUrl.indexOf(",");
+
+  return {
+    mimeType: dataUrl.slice(5, commaIndex).split(";")[0],
+    base64: dataUrl.slice(commaIndex + 1)
+  };
+}
+
 async function synthesizeHairstylePreview(){
 
   if(!auth.currentUser){
@@ -2043,6 +2071,22 @@ async function synthesizeHairstylePreview(){
     const base64Data =
     currentImage.slice(commaIndex + 1);
 
+    // 텍스트 설명만으로는 Gemini가 길이·컬 모양을 마음대로 해석해서
+    // (예: C컬펌인데 훨씬 짧게 나오는 등) 참고 사진이랑 다르게 나올 수
+    // 있다. hairDB에 이미 있는 실제 스타일 사진을 같이 보내서 "이
+    // 사진처럼" 합성하도록 한다. 못 불러와도 텍스트만으로 진행된다.
+    let styleImageBase64 = null;
+    let styleImageMimeType = null;
+
+    try{
+      const styleImg = await fetchImageAsBase64(style.image);
+      styleImageBase64 = styleImg.base64;
+      styleImageMimeType = styleImg.mimeType;
+    }
+    catch(error){
+      console.warn("스타일 참고 이미지를 불러오지 못해 텍스트 설명만으로 진행합니다.", error);
+    }
+
     const response =
     await fetch(SYNTHESIZE_FUNCTION_URL, {
       method:"POST",
@@ -2054,7 +2098,9 @@ async function synthesizeHairstylePreview(){
         imageBase64: base64Data,
         mimeType: mimeType,
         styleName: style.name,
-        styleDescription: style.point || style.reason || ""
+        styleDescription: style.point || style.reason || "",
+        styleImageBase64: styleImageBase64,
+        styleImageMimeType: styleImageMimeType
       })
     });
 
